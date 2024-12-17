@@ -18,7 +18,7 @@
             padding: 5px;
             box-sizing: border-box;
         }
-        #finish-button {
+        #finish-button, #download-button {
             margin-top: 20px;
             padding: 10px 20px;
             background-color: #007bff;
@@ -27,8 +27,12 @@
             cursor: pointer;
             font-size: 16px;
         }
-        #finish-button:hover {
+        #finish-button:hover, #download-button:hover {
             background-color: #0056b3;
+        }
+        #error-message {
+            color: red;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -36,54 +40,106 @@
     <h1>入力実験</h1>
     <p>以下の指示に従い、入力欄に回答を入力し、確定ボタンを押してください。</p>
     
-    <!-- 入力欄を表示するエリア -->
-    <div id="input-container">
-        <div class="response-container">
-            <input type="text" id="current-input" placeholder="ここに入力してください" />
-            <button onclick="confirmInput()">確定</button>
-        </div>
+    <!-- 入力欄と確定ボタン -->
+    <div class="response-container">
+        <input type="text" id="current-input" placeholder="ここに入力してください" />
+        <button id="confirm-button" onclick="confirmInput()">確定</button>
+        <div id="error-message"></div>
     </div>
 
+    <!-- 回答一覧表示 -->
+    <p>↓過去の回答↓</p>
+    <div id="response-list"></div>
+    <p>現在の回答数: <span id="response-count">0</span></p>
+
+
     <!-- 回答を完了するボタン -->
-    <button id="finish-button">回答を完了する</button>
+    <p>解釈が思いつかなくなりましたら、【回答を完了する】を押してください。</p>
+    <button id="finish-button" onclick="finishExperiment()">回答を完了する</button>
+    <button id="download-button" onclick="downloadResponses()">データをダウンロード</button>
 
     <script>
         let responses = []; // 回答を保存する配列
 
-        // 確定ボタンの動作
         function confirmInput() {
-            const currentInput = document.getElementById("current-input");
-            const value = currentInput.value.trim();
+            const inputField = document.getElementById("current-input");
+            const errorMessage = document.getElementById("error-message");
+            const responseList = document.getElementById("response-list");
+            const inputValue = inputField.value.trim();
+            
 
-            if (value !== "") {
-                // 回答を配列に保存
-                responses.push(value);
+            // 重複判定は回答内容のみで行う
+            if (responses.some(response => response.value === inputValue)) {
+                errorMessage.textContent = "過去の回答と重複しています。";
+                return; // 確定を中止
+            }
 
-                // 現在の入力欄を編集不可にし、固定表示
-                currentInput.disabled = true;
-                currentInput.classList.add("readonly-input");
+            // 入力が空なら無視
+            if (inputValue === "") {
+                errorMessage.textContent = "入力が空です。";
+                return;
+            }
 
-                // 新しい入力欄を追加
-                const inputContainer = document.getElementById("input-container");
-                const newInput = `
-                    <div class="response-container">
-                        <input type="text" id="current-input" placeholder="ここに入力してください" />
-                        <button onclick="confirmInput()">確定</button>
-                    </div>
-                `;
-                inputContainer.insertAdjacentHTML("beforeend", newInput);
+            // エラーメッセージをリセット
+            errorMessage.textContent = "";
+
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+
+            // 回答を配列に保存
+            responses.push({ 
+                value: inputValue, 
+                time: timestamp 
+            }); // 回答内容とタイムスタンプを保存
+
+
+            // 入力内容をリストに表示（編集不可の入力欄として追加）
+            const responseItem = document.createElement("input");
+            responseItem.type = "text";
+            //responseItem.value = `${inputValue} （${timestamp}）`;
+            responseItem.value = inputValue;
+            responseItem.className = "readonly-input";
+            responseItem.disabled = true;
+            responseList.appendChild(responseItem);
+
+            // 改行を追加
+            responseList.appendChild(document.createElement("br"));
+
+            // 回答数の更新
+            document.getElementById("response-count").textContent = responses.length;
+
+            // 入力欄をリセット
+            inputField.value = "";
+        }
+
+        function finishExperiment() {
+            if (confirm("回答を完了しますか？")) {
+                alert("ご協力ありがとうございました！");
+                console.log("回答データ:", responses);
+                window.location.href = "thank_you.html";
             }
         }
 
-        // 「回答を完了する」ボタンの動作
-        document.getElementById("finish-button").addEventListener("click", function() {
-            const confirmFinish = confirm("回答を完了しますか？");
-            if (confirmFinish) {
-                console.log("回答データ:", responses); // データをコンソールに表示
-                alert("回答を送信しました。ご協力ありがとうございました！");
-                window.location.href = "thank_you.html"; // 完了ページへ遷移
-            }
-        });
+        function downloadResponses() {
+            // CSVのヘッダー行
+            let csvContent = "data:text/csv;charset=utf-8,回答内容,タイムスタンプ\n";
+            
+            // 各回答をCSV形式に追加
+            responses.forEach(response => {
+                csvContent += `${response.value},${response.time}\n`;
+            });
+            
+            // ダウンロードリンクの生成
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "responses.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
     </script>
 </body>
 </html>
+
