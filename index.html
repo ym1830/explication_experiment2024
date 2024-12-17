@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>入力実験ページ</title>
-    <link rel="stylesheet" href="jspsych/jspsych.css"> <!-- jsPsychのCSSを利用 -->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,6 +16,7 @@
             background-color: #f0f0f0;
             width: 100%;
             padding: 5px;
+            box-sizing: border-box;
         }
         #finish-button {
             margin-top: 20px;
@@ -34,79 +34,53 @@
 </head>
 <body>
     <h1>入力実験</h1>
-    <p>以下の指示に従い、入力欄に回答を入力してください。</p>
+    <p>以下の指示に従い、入力欄に回答を入力し、確定ボタンを押してください。</p>
     
-    <div id="jspsych-experiment"></div> <!-- jsPsychの実験コンテナ -->
+    <!-- 入力欄を表示するエリア -->
+    <div id="input-container">
+        <div class="response-container">
+            <input type="text" id="current-input" placeholder="ここに入力してください" />
+            <button onclick="confirmInput()">確定</button>
+        </div>
+    </div>
 
+    <!-- 回答を完了するボタン -->
     <button id="finish-button">回答を完了する</button>
 
-    <script src="jspsych/jspsych.js"></script> <!-- jsPsych本体 -->
-    <script src="jspsych/jspsych-html-button-response.js"></script> <!-- プラグイン -->
     <script>
-        const jsPsych = initJsPsych({
-            on_finish: function() {
-                jsPsych.data.displayData(); // 結果を表示
-            }
-        });
+        let responses = []; // 回答を保存する配列
 
-        // 回答を保存する配列
-        let responses = [];
+        // 確定ボタンの動作
+        function confirmInput() {
+            const currentInput = document.getElementById("current-input");
+            const value = currentInput.value.trim();
 
-        // タイムラインの定義
-        const timeline = [];
+            if (value !== "") {
+                // 回答を配列に保存
+                responses.push(value);
 
-        function createInputTrial() {
-            return {
-                type: jsPsychHtmlButtonResponse,
-                stimulus: generateInputHTML(), // 動的にHTMLを生成
-                choices: ["確定"], // 確定ボタン
-                on_finish: function(data) {
-                    // 現在の入力欄の内容を取得
-                    let currentInput = document.getElementById("current-input").value.trim();
+                // 現在の入力欄を編集不可にし、固定表示
+                currentInput.disabled = true;
+                currentInput.classList.add("readonly-input");
 
-                    if (currentInput !== "") {
-                        responses.push(currentInput); // 回答を保存
-                        data.response = currentInput; // jsPsychデータにも保存
-                    }
-                }
-            };
-        }
-
-        // 入力欄と過去回答の表示
-        function generateInputHTML() {
-            let html = '<div>';
-
-            // 過去の回答を表示（編集不可）
-            responses.forEach((response, index) => {
-                html += `
+                // 新しい入力欄を追加
+                const inputContainer = document.getElementById("input-container");
+                const newInput = `
                     <div class="response-container">
-                        <input type="text" class="readonly-input" value="${response}" disabled>
+                        <input type="text" id="current-input" placeholder="ここに入力してください" />
+                        <button onclick="confirmInput()">確定</button>
                     </div>
                 `;
-            });
-
-            // 新しい入力欄を追加
-            html += `
-                <div class="response-container">
-                    <input type="text" id="current-input" placeholder="ここに入力してください">
-                </div>
-            `;
-            html += '</div>';
-            return html;
+                inputContainer.insertAdjacentHTML("beforeend", newInput);
+            }
         }
-
-        // 試行回数を5回に設定（必要に応じて変更）
-        for (let i = 0; i < 5; i++) {
-            timeline.push(createInputTrial());
-        }
-
-        // 実験を実行
-        jsPsych.run(timeline);
 
         // 「回答を完了する」ボタンの動作
         document.getElementById("finish-button").addEventListener("click", function() {
             const confirmFinish = confirm("回答を完了しますか？");
             if (confirmFinish) {
+                console.log("回答データ:", responses); // データをコンソールに表示
+                alert("回答を送信しました。ご協力ありがとうございました！");
                 window.location.href = "thank_you.html"; // 完了ページへ遷移
             }
         });
