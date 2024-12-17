@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>入力実験ページ</title>
+    <link rel="stylesheet" href="jspsych/css/jspsych.css"> <!-- jsPsychのCSSを利用 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .response-container {
+            margin-bottom: 10px;
+        }
+        .readonly-input {
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            width: 100%;
+            padding: 5px;
+        }
+        #finish-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #finish-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>入力実験</h1>
+    <p>以下の指示に従い、入力欄に回答を入力してください。</p>
+    
+    <div id="jspsych-experiment"></div> <!-- jsPsychの実験コンテナ -->
+
+    <button id="finish-button">回答を完了する</button>
+
+    <script src="jspsych/jspsych.js"></script> <!-- jsPsych本体 -->
+    <script src="jspsych/plugins/jspsych-html-button-response.js"></script> <!-- プラグイン -->
+    <script>
+        const jsPsych = initJsPsych({
+            on_finish: function() {
+                jsPsych.data.displayData(); // 結果を表示
+            }
+        });
+
+        // 回答を保存する配列
+        let responses = [];
+
+        // タイムラインの定義
+        const timeline = [];
+
+        function createInputTrial() {
+            return {
+                type: jsPsychHtmlButtonResponse,
+                stimulus: generateInputHTML(), // 動的にHTMLを生成
+                choices: ["確定"], // 確定ボタン
+                on_finish: function(data) {
+                    // 現在の入力欄の内容を取得
+                    let currentInput = document.getElementById("current-input").value.trim();
+
+                    if (currentInput !== "") {
+                        responses.push(currentInput); // 回答を保存
+                        data.response = currentInput; // jsPsychデータにも保存
+                    }
+                }
+            };
+        }
+
+        // 入力欄と過去回答の表示
+        function generateInputHTML() {
+            let html = '<div>';
+
+            // 過去の回答を表示（編集不可）
+            responses.forEach((response, index) => {
+                html += `
+                    <div class="response-container">
+                        <input type="text" class="readonly-input" value="${response}" disabled>
+                    </div>
+                `;
+            });
+
+            // 新しい入力欄を追加
+            html += `
+                <div class="response-container">
+                    <input type="text" id="current-input" placeholder="ここに入力してください">
+                </div>
+            `;
+            html += '</div>';
+            return html;
+        }
+
+        // 試行回数を5回に設定（必要に応じて変更）
+        for (let i = 0; i < 5; i++) {
+            timeline.push(createInputTrial());
+        }
+
+        // 実験を実行
+        jsPsych.run(timeline);
+
+        // 「回答を完了する」ボタンの動作
+        document.getElementById("finish-button").addEventListener("click", function() {
+            const confirmFinish = confirm("回答を完了しますか？");
+            if (confirmFinish) {
+                window.location.href = "thank_you.html"; // 完了ページへ遷移
+            }
+        });
+    </script>
+</body>
+</html>
