@@ -187,6 +187,7 @@
 
 
         function finishExperiment() {
+            console.log("finishExperiment 関数が実行されました");// デバッグ用
             const finishButton = document.getElementById("finish-button");
             const overlayMessage = document.getElementById("overlay-message");
             const url = "https://script.google.com/macros/s/AKfycbwsGAMj2TUnZqGqxHRD3YpKzPF6jw8mtyPoy-WEkiTNkqRTc01-C0Njrzl1-EaJT4Fo/exec"; // Google Apps ScriptのデプロイURL
@@ -210,7 +211,10 @@
                 },
                 body: JSON.stringify(responses) // responses 配列を送信
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("レスポンスを受信:", response);// デバッグ用
+                return response.json();
+            })
             .then(data => {
                 console.log("データ送信完了:", data);
                 alert("データが送信されました。ご協力ありがとうございました！");
