@@ -194,7 +194,8 @@
         function finishExperiment() {
             console.log("送信前のresponsesデータ:", responses); // 送信前に確認// デバッグ用
             const finishButton = document.getElementById("finish-button");
-            const url = "https://script.google.com/macros/s/AKfycbwsGAMj2TUnZqGqxHRD3YpKzPF6jw8mtyPoy-WEkiTNkqRTc01-C0Njrzl1-EaJT4Fo/exec"; // Google Apps ScriptのデプロイURL
+            const url = "https://script.google.com/macros/s/AKfycbxzA13XTbyfoS0hAAKZiUiIlZ7zZESRC5Ke5uJsHU0MiEcJEXdOCp7FJmEgujcXYevo/exec"; // Google Apps ScriptのデプロイURL
+            console.log("送信先URL:", url);
 
             // 回答数チェック（現在のページのみ）
             const currentPageResponses = responses.filter(response => response.page === currentPage);
@@ -204,29 +205,24 @@
             }
             
             // データ送信処理
-            function finishExperiment() {
-                console.log("送信前のresponsesデータ:", responses);
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(responses) // ID付きデータを送信
+            })
+            .then(response => response.json()) // レスポンスをJSONとして処理
+            .then(data => {
+                console.log("データ送信成功:", data);
+                alert("データが送信されました。ご協力ありがとうございました！");
+                window.location.href = "thank_you.html"; // 完了ページに移動
+            })
+            .catch(error => {
+                console.error("データ送信エラー:", error);
+                alert("データの送信に失敗しました。");
+            });
 
-                const url = "https://script.google.com/macros/s/AKfycbwsGAMj2TUnZqGqxHRD3YpKzPF6jw8mtyPoy-WEkiTNkqRTc01-C0Njrzl1-EaJT4Fo/exec";
-
-                fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(responses) // ID付きデータを送信
-                })
-                .then(response => response.json()) // レスポンスをJSONとして処理
-                .then(data => {
-                    console.log("データ送信成功:", data);
-                    alert("データが送信されました。ご協力ありがとうございました！");
-                    window.location.href = "thank_you.html"; // 完了ページに移動
-                })
-                .catch(error => {
-                    console.error("データ送信エラー:", error);
-                    alert("データの送信に失敗しました。");
-                });
-            }
         }
 
 
