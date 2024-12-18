@@ -69,6 +69,8 @@
     </div>
     
     <button id="download-button" onclick="downloadResponses()">データをダウンロード</button>
+    <div id="status-message"></div>
+
 
     <script>
         const currentPage = 2; // 現在のページ番号
@@ -203,6 +205,9 @@
                 alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
                 return; // 処理を中止
             }
+
+            // 送信中メッセージ表示
+            statusMessage.textContent = "データを送信しています...";
             
             // データ送信処理
             fetch(url, {
