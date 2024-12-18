@@ -206,26 +206,22 @@
             // データ送信処理
             fetch(url, {
                 method: "POST",
+                mode: "no-cors", // CORSを回避
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(responses) // responses 配列を送信
+                body: JSON.stringify(responses)
             })
-            .then(response => {
-                console.log("レスポンスを受信:", response);// デバッグ用
-                return response.json();
-            })
-            .then(data => {
-                console.log("データ送信完了:", data);
-                alert("データが送信されました。ご協力ありがとうございました！");
-
-                // データ送信後にthank_you.htmlに遷移
+            .then(() => {
+                console.log("データ送信成功（no-corsモード）");
+                alert("データが送信されました！");
                 window.location.href = "thank_you.html";
             })
             .catch(error => {
                 console.error("データ送信エラー:", error);
-                alert("データの送信に失敗しました。インターネット接続を確認してください。");
+                alert("データの送信に失敗しました。");
             });
+
         }
 
         function downloadResponses() {
