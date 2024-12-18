@@ -2,222 +2,30 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>解釈実験ページ</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .response-container {
-            margin-bottom: 10px;
-        }
-        .readonly-input {
-            border: 1px solid #ccc;
-            background-color: #f0f0f0;
-            width: 100%;
-            padding: 5px;
-            box-sizing: border-box;
-        }
-        #finish-button, #download-button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #finish-button:hover, #download-button:hover {
-            background-color: #0056b3;
-        }
-        #error-message {
-            color: red;
-            margin-top: 5px;
-        }
-    </style>
+    <title>被験者ID入力</title>
 </head>
 <body>
-    <h1>解釈実験</h1>
-    <h2>設問1</h2>
-    <p>以下の指示に従い、入力欄に回答を入力し、確定ボタンを押してください。</p>
-    
-    <!-- 入力欄と確定ボタン -->
-    <div class="response-container">
-        <input type="text" id="current-input" placeholder="ここに入力してください" />
-        <button id="confirm-button" onclick="confirmInput()">確定</button>
-        <div id="error-message"></div>
-    </div>
-
-    <!-- 回答一覧表示 -->
-    <p>↓過去の回答↓</p>
-    <div id="response-list"></div>
-    <p>現在の回答数: <span id="response-count">0</span></p>
-
-
-    <!-- 回答を完了するボタン -->
-    <p>解釈が思いつかなくなりましたら、【回答を完了する】を押してください。</p>
-    <p>※極端に回答が少ない場合、回答を完了できません。</p>
-    <div style="position: relative; display: inline-block;">
-        <button id="finish-button" onclick="finishExperiment()" disabled>回答を完了する</button>
-        <div id="overlay" style="
-            position: absolute; 
-            top: 0; left: 0; 
-            width: 100%; height: 100%;
-            background: transparent;
-            cursor: not-allowed;">
-        </div>
-    </div>
-    
-    <button id="download-button" onclick="downloadResponses()">データをダウンロード</button>
+    <h1>被験者ID入力</h1>
+    <p>以下に被験者IDを入力してください。</p>
+    <input type="text" id="participant-id" placeholder="例: ID12345" required>
+    <button onclick="saveParticipantID()">次へ進む</button>
 
     <script>
-        const currentPage = 1; // 現在のページ番号
+        function saveParticipantID() {
+            const participantId = document.getElementById("participant-id").value.trim();
 
-        // ページ読み込み時に過去の回答を表示
-        window.onload = () => {
-            displayResponses(currentPage); // 現在のページを表示
-        };
-
-        // 10分後に入力を無効化するタイマー
-        setTimeout(() => {
-            const inputField = document.getElementById("current-input");
-            const confirmButton = document.getElementById("confirm-button");
-            
-            // 入力欄とボタンを無効化
-            inputField.disabled = true;
-            confirmButton.disabled = true;
-
-            // メッセージを表示
-            alert("時間が経過したため、これ以上の回答はできません。");
-        }, 10 * 60 * 1000); // 10分 = 10 * 60 * 1000 ミリ秒
-
-        // 既存データを読み込むか新規作成
-        let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
-
-        document.getElementById("finish-button").addEventListener("click", () => {
-            const finishButton = document.getElementById("finish-button");
-            if (finishButton.disabled) {
-                alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
-            }
-        });
-
-        // 回答を表示する関数（現在のページのみ表示）
-        function displayResponses(currentPage) {
-            const responseList = document.getElementById("response-list");
-            responseList.innerHTML = ""; // 一旦リストをクリア
-
-            // 現在のページのデータだけ取得してHTMLに表示
-            const currentPageResponses = responses.filter(response => response.page === currentPage);
-            responseList.innerHTML = currentPageResponses
-                .map(response => `<input type="text" value="${response.value}" class="readonly-input" disabled><br>`)
-                .join('');
-        }        
-
-        // 回答を追加する関数
-        function confirmInput() {
-            const inputField = document.getElementById("current-input");
-            const errorMessage = document.getElementById("error-message");
-            const inputValue = inputField.value.trim();
-            
-
-            // 1ページ目のデータだけで重複判定
-            console.log("responses配列の中身:", responses);
-            const currentPageResponses = responses.filter(response => response.page === currentPage);
-            console.log("現在のページの回答:", currentPageResponses);
-            console.log("現在のページの回答数:", currentPageResponses.length);
-            if (currentPageResponses.some(response => response.value === inputValue)) {
-                errorMessage.textContent = "このページ内ですでに入力された内容です。";
+            if (!participantId) {
+                alert("被験者IDを入力してください。");
                 return;
             }
 
-            // 入力が空なら無視
-            if (inputValue === "") {
-                errorMessage.textContent = "入力が空です。";
-                return;
-            }
+            // 被験者IDをlocalStorageに保存
+            localStorage.setItem("participantId", participantId);
+            console.log("保存されたID:", participantId);
 
-            // エラーメッセージをリセット
-            errorMessage.textContent = "";
-
-            // タイムスタンプ取得
-            const timestamp = new Date().toISOString();
-
-            // 回答を配列に保存
-            responses.push({ 
-                value: inputValue, 
-                time: timestamp,
-                page: currentPage // ページフラグを追加 
-            }); // 回答内容とタイムスタンプを保存
-
-            // sessionStorage に保存
-            sessionStorage.setItem("responses", JSON.stringify(responses));
-
-            // リスト表示をリフレッシュ
-            displayResponses(currentPage);
-
-            // responseItemの作成と表示
-            const responseItem = document.createElement("input");
-            responseItem.type = "text";
-            responseItem.value = inputValue;
-            responseItem.className = "readonly-input";// 読み取り専用のクラスを追加
-            responseItem.disabled = true;// 編集不可に設定
-
-            // 回答数の更新
-            // document.getElementById("response-count").textContent = currentPageResponses.length+1;
-            // 回答数の更新（表示ページ内だけ）
-            const updatedPageResponses = responses.filter(response => response.page === currentPage);
-            document.getElementById("response-count").textContent = updatedPageResponses.length;
-
-
-            // 回答数が5以上なら完了ボタンを有効化
-            const finishButton = document.getElementById("finish-button");
-            const overlay = document.getElementById("overlay");
-
-            if (updatedPageResponses.length >= 5) {
-                finishButton.disabled = false; // ボタンを有効化
-                overlay.style.display = "none"; // オーバーレイを非表示にする
-            } else {
-                finishButton.disabled = true; // ボタンを無効化（念のため）
-                overlay.style.display = "block"; // オーバーレイを表示する
-            }
-
-            // 入力欄をリセット
-            inputField.value = "";
-        }
-
-        function finishExperiment() {
-            const finishButton = document.getElementById("finish-button");
-            if (responses.length < 5) {
-                alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
-                return; // 完了処理を中止
-            }
-
-            if (confirm("回答を完了し、次の設問に移りますか？")) {
-                console.log("回答データ:", responses);
-                window.location.href = "second_page.html";
-            }
-        }
-
-        function downloadResponses() {
-            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
-            // CSVのヘッダー行
-            let csvContent = "data:text/csv;charset=utf-8,回答内容,タイムスタンプ,ページ\n";
-            
-            // 各回答をCSV形式に追加
-            responses.forEach(response => {
-                csvContent += `${response.value},${response.time},${response.page}\n`;
-            });
-            
-            // ダウンロードリンクの生成
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "responses.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // 回答ページへ遷移
+            window.location.href = "first_page.html";
         }
     </script>
 </body>
 </html>
-
