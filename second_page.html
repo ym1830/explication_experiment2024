@@ -210,13 +210,13 @@
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(responses) // ID付きデータを送信
+                mode: "no-cors",  // これを追加
+                body: JSON.stringify(responses)
             })
-            .then(response => response.json()) // レスポンスをJSONとして処理
-            .then(data => {
-                console.log("データ送信成功:", data);
-                alert("データが送信されました。ご協力ありがとうございました！");
-                window.location.href = "thank_you.html"; // 完了ページに移動
+            .then(response => {
+                // no-corsだとresponseは中身を読めないため、ステータスチェック等はできない
+                alert("データが送信されました。");
+                window.location.href = "thank_you.html";
             })
             .catch(error => {
                 console.error("データ送信エラー:", error);
