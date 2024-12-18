@@ -98,7 +98,7 @@
         let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
 
 
-        document.getElementById("finish-button-wrapper").addEventListener("click", () => {
+        document.getElementById("finish-button").addEventListener("click", () => {
             const finishButton = document.getElementById("finish-button");
             if (finishButton.disabled) {
                 alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
@@ -192,57 +192,52 @@
 
 
         function finishExperiment() {
-            console.log("finishExperiment 関数が実行されました");// デバッグ用
+            console.log("送信前のresponsesデータ:", responses); // 送信前に確認// デバッグ用
             const finishButton = document.getElementById("finish-button");
-            const overlayMessage = document.getElementById("overlay-message");
             const url = "https://script.google.com/macros/s/AKfycbwsGAMj2TUnZqGqxHRD3YpKzPF6jw8mtyPoy-WEkiTNkqRTc01-C0Njrzl1-EaJT4Fo/exec"; // Google Apps ScriptのデプロイURL
-
-            // 被験者IDを回答データに追加
-            const responsesWithId = responses.map(response => ({
-                ...response,
-                id: participantId // 新しいID列を追加
-            }));
 
             // 回答数チェック（現在のページのみ）
             const currentPageResponses = responses.filter(response => response.page === currentPage);
             if (currentPageResponses.length < 5) {
-                // オーバーレイ表示
-                overlayMessage.style.display = "block";
-                setTimeout(() => {
-                    overlayMessage.style.display = "none";
-                }, 3000);
-                return; // 完了処理を中止
+                alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
+                return; // 処理を中止
             }
             
             // データ送信処理
-            fetch(url, {
-                method: "POST",
-                mode: "no-cors", // CORSを回避
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(responses)
-            })
-            .then(() => {
-                console.log("データ送信成功（no-corsモード）");
-                alert("データが送信されました！");
-                window.location.href = "thank_you.html";
-            })
-            .catch(error => {
-                console.error("データ送信エラー:", error);
-                alert("データの送信に失敗しました。");
-            });
+            function finishExperiment() {
+                console.log("送信前のresponsesデータ:", responses);
 
+                const url = "https://script.google.com/macros/s/AKfycbwsGAMj2TUnZqGqxHRD3YpKzPF6jw8mtyPoy-WEkiTNkqRTc01-C0Njrzl1-EaJT4Fo/exec";
+
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(responses) // ID付きデータを送信
+                })
+                .then(response => response.json()) // レスポンスをJSONとして処理
+                .then(data => {
+                    console.log("データ送信成功:", data);
+                    alert("データが送信されました。ご協力ありがとうございました！");
+                    window.location.href = "thank_you.html"; // 完了ページに移動
+                })
+                .catch(error => {
+                    console.error("データ送信エラー:", error);
+                    alert("データの送信に失敗しました。");
+                });
+            }
         }
+
 
         function downloadResponses() {
             const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
             // CSVのヘッダー行
-            let csvContent = "data:text/csv;charset=utf-8,回答内容,タイムスタンプ,ページ\n";
+            let csvContent = "data:text/csv;charset=utf-8,ID,回答内容,タイムスタンプ,ページ\n";
             
             // 各回答をCSV形式に追加
             responses.forEach(response => {
-                csvContent += `${response.value},${response.time},${response.page}\n`;
+                csvContent += `${response.id},${response.value},${response.time},${response.page}\n`;
             });
             
             // ダウンロードリンクの生成
@@ -257,4 +252,3 @@
     </script>
 </body>
 </html>
-

@@ -224,11 +224,11 @@
         function downloadResponses() {
             const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
             // CSVのヘッダー行
-            let csvContent = "data:text/csv;charset=utf-8,回答内容,タイムスタンプ,ページ\n";
+            let csvContent = "data:text/csv;charset=utf-8,ID,回答内容,タイムスタンプ,ページ\n";
             
             // 各回答をCSV形式に追加
             responses.forEach(response => {
-                csvContent += `${response.value},${response.time},${response.page}\n`;
+                csvContent += `${response.id},${response.value},${response.time},${response.page}\n`;
             });
             
             // ダウンロードリンクの生成
