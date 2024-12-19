@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>実験説明</title>
+</head>
+<body>
+    <h1>実験説明</h1>
+    <p>以下の説明をよくお読みください。回答に関わる説明は以降のページでも読み返すことができます。</p>
+    <h2>研究目的と意義</h2>
+    <ul>
+        <li>本研究は、小説の魅力を明らかにする研究の一環として行っています</li>
+        <li>皆さんのご協力により、魅力的な小説を執筆する方法の一端が解明されるかもしれません</li>
+    </ul>
+
+    <h2>実験概要</h2>
+    <ul>
+        <li>文章を読み、その文章の解釈を列挙してもらいます</li>
+    </ul>
+    
+    <h2>実験環境</h2>
+    <ul>
+      <li>場所：読書に集中できる環境</li>
+      <li>媒体：PC（スマートフォン等で回答しないでください）</li>
+    </ul>
+    
+    <h2>回答手順</h2>
+    <p><big>概要：読む→「入力→確定」を繰り返す→出尽くしたら回答完了</big></p>
+    <ul>
+      <li>文章を一読する</li>
+      <li>本文章の解釈を<strong>【語句の形式】</strong>で入力する</li>
+        <ul>
+            <li>「主人公」と「空間」の解釈をしてもらいます</li>
+            <li>ページ冒頭でどちらを回答するかを指定します</li>
+            <li>具体的な答え方は以降の「解釈の答え方」で述べます</li>
+        </ul>
+      <li>語句を1つ入力したら<strong>「確定」</strong>ボタンを押す<strong>（確定後の修正不可）</strong></li>
+      <li><strong>できる限り多く</strong>回答してくださると嬉しいです</li>
+      <li>解釈が思い浮かばなくなったらページ下部の<strong>「回答を完了する」</strong>を押す</li>
+      <li>上記の手順を理解しましたら、回答方法を理解した、と下部の入力欄に入力してください（「次へ進む」はまだ押さないでください）</li>
+    </ul>
+
+    <h2>解釈の答え方</h2>
+    
+    <h2>謝金に関する注意事項</h2>
+    <ul>
+      <li>回答された語句の量に応じて謝金が変動します【変動幅も明記する】</li>
+      <li>あまりに無関係な語句が多く回答された場合、謝金は支払えません</li>
+      <li>上記理解しましたら下部の入力欄に、すでに入力したものに続けて、謝金同意、と入力してください</li>
+    </ul>
+    
+    <label for="participant-id">入力欄</label>
+    <input type="text" id="participant-id" placeholder="入力欄" required>
+    <button onclick="checkInputAndProceed()">次へ進む</button>
+
+    <script>
+        function checkInputAndProceed() {
+            const input = document.getElementById("participant-id").value.trim();
+            // sessionStorageからデータを取得
+            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
+            
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+
+            // 「回答方法を理解した」が入力されているかチェック
+            if (input === "回答方法を理解した謝金同意") {
+                responses.push({//編集中編集中編集中
+                    id: participantId,
+                    value: "understood",
+                    time: new Date().toISOString(),
+                    page: 0
+                });
+                // sessionStorage に保存
+                sessionStorage.setItem("responses", JSON.stringify(responses));
+
+
+                alert("確認しました。次のページに進みます。");
+                window.location.href = "reading_time.html"; // 次ページへ遷移
+            } else {
+                alert("正しく入力してください");
+            }
+        }
+    </script>
+</body>
+</html>

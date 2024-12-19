@@ -6,8 +6,8 @@
 </head>
 <body>
     <h1>被験者ID入力</h1>
-    <p>以下に被験者IDを入力してください。</p>
-    <input type="text" id="participant-id" placeholder="例: ID12345" required>
+    <p>以下に被験者IDを入力してください（事前共有したものをコピーして貼り付けてください）。</p>
+    <input type="text" id="participant-id" placeholder="半角数字で入力" required>
     <button onclick="saveParticipantID()">次へ進む</button>
 
     <script>
@@ -24,7 +24,7 @@
             console.log("保存されたID:", participantId);
 
             // 回答ページへ遷移
-            window.location.href = "first_page.html";
+            window.location.href = "introduction.html";
         }
     </script>
 </body>

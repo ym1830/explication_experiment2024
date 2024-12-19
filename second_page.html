@@ -69,7 +69,6 @@
     </div>
     
     <button id="download-button" onclick="downloadResponses()">データをダウンロード</button>
-    <div id="status-message"></div>
 
 
     <script>
@@ -194,42 +193,22 @@
 
 
         function finishExperiment() {
-            console.log("送信前のresponsesデータ:", responses); // 送信前に確認// デバッグ用
             const finishButton = document.getElementById("finish-button");
-            const url = "https://script.google.com/macros/s/AKfycbxzA13XTbyfoS0hAAKZiUiIlZ7zZESRC5Ke5uJsHU0MiEcJEXdOCp7FJmEgujcXYevo/exec"; // Google Apps ScriptのデプロイURL
-            const statusMessage = document.getElementById("status-message");
-            console.log("送信先URL:", url);
-
-            // 回答数チェック（現在のページのみ）
-            const currentPageResponses = responses.filter(response => response.page === currentPage);
-            if (currentPageResponses.length < 5) {
+            
+            
+            if (responses.length < 5) {
                 alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
-                return; // 処理を中止
+                return; // 完了処理を中止
             }
 
-            // 送信中メッセージ表示
-            statusMessage.textContent = "データを送信しています...";
-            
-            // データ送信処理
-            fetch(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                mode: "no-cors",  // これを追加
-                body: JSON.stringify(responses)
-            })
-            .then(response => {
-                // no-corsだとresponseは中身を読めないため、ステータスチェック等はできない
-                alert("データが送信されました。");
-                window.location.href = "thank_you.html";
-            })
-            .catch(error => {
-                console.error("データ送信エラー:", error);
-                alert("データの送信に失敗しました。");
-            });
 
+            if (confirm("回答を完了し、事後アンケートに移りますか？")) {
+                console.log("回答データ:", responses);
+                window.location.href = "post_survey.html";
+            }
         }
+
+        
 
 
         function downloadResponses() {

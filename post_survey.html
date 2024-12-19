@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>事後アンケート</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>事後アンケート</h1>
+    <p>以下のアンケートにご協力をお願いいたします。特に記述することがなければ空欄のまま送信してください。</p>
+
+    <form id="survey-form">
+        <fieldset>
+            <legend>わかりやすさについて</legend>
+            <label for="procedure">回答手順：</label><br>
+            <textarea id="procedure" name="clarity_procedure" rows="3"></textarea><br>
+            
+            <label for="explanation">解釈の観点の説明：</label><br>
+            <textarea id="explanation" name="clarity_explanation" rows="3"></textarea><br>
+            
+            <label for="layout">ページレイアウト：</label><br>
+            <textarea id="layout" name="clarity_layout" rows="3"></textarea><br>
+        </fieldset>
+
+        <fieldset>
+            <legend>その他感想，疑問点，問題点</legend>
+            <textarea id="comments" name="additional_comments" rows="5"></textarea>
+        </fieldset>
+        <br>
+        <button type="button" onclick="submitSurvey()">送信</button>
+    </form>
+
+    <script>
+        function submitSurvey() {
+            // sessionStorageからデータを取得
+            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
+
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            
+            // アンケートデータを取得
+            // 設問1-4の回答データを取得し、page101~104として保存
+            const surveyResponses = [
+                { page: 101, value: document.getElementById("procedure").value || "" },
+                { page: 102, value: document.getElementById("explanation").value || "" },
+                { page: 103, value: document.getElementById("layout").value || "" },
+                { page: 104, value: document.getElementById("comments").value || "" }
+            ];
+
+            // 送信先URL
+            const url = "https://script.google.com/macros/s/AKfycbxzA13XTbyfoS0hAAKZiUiIlZ7zZESRC5Ke5uJsHU0MiEcJEXdOCp7FJmEgujcXYevo/exec"; // Google Apps ScriptのデプロイURL
+
+
+            // 現在のresponsesに追加
+            surveyResponses.forEach(response => {
+                responses.push({
+                    id: participantId,
+                    value: response.value,
+                    time: new Date().toISOString(),
+                    page: response.page
+                });
+            });
+
+            // sessionStorageに保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+
+            console.log("送信前のresponsesデータ:", responses)
+
+            // データ送信
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                mode: "no-cors",  // 送信だけモード．
+                body: JSON.stringify(responses)
+            })
+            .then(() => {
+                alert("データが送信されました。ご協力ありがとうございました。");
+                window.location.href = "thank_you.html"; // 完了ページ
+            })
+            .catch((error) => {
+                console.error("送信エラー:", error);
+                alert("送信中にエラーが発生しました。");
+            });
+        }
+    </script>
+</body>
+</html>

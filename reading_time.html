@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>読書パート</title>
+</head>
+<body>
+    <h1>読書パート</h1>
+    <h1>手順</h1>
+    <ul>
+      <li>まず文章ファイルを以下からダウンロードして開いてください</li>
+    </ul>
+      <button onclick="downloadFile()">ファイルをダウンロード</button>
+    </a>    
+    <ul>
+      <li><strong>普段通りの読み方</strong>で一読してください</li>
+      <li><strong>何について解釈するか</strong>は後で示すので、意識する必要はありません</li>
+      <li>回答パートで文章を参照しても良いので、<strong>記憶しようとする必要はありません</strong></li>
+      <li>読み終えましたら、入力欄に文章末尾の5文字（記号を除く）を入力して進んでください</li>
+    </ul>
+    
+    <label for="participant-id">入力欄</label>
+    <input type="text" id="participant-id" placeholder="入力欄" required>
+    <button onclick="checkInputAndProceed()">回答へ進む</button>
+
+    <script>
+        function checkInputAndProceed() {
+            const input = document.getElementById("participant-id").value.trim();
+            // sessionStorageからデータを取得
+            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
+            
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+
+            // 「末尾5文字」が入力されているかチェック
+            if (input === "末尾5文字") {
+                responses.push({
+                    id: participantId,
+                    value: "read",
+                    time: new Date().toISOString(),
+                    page: 1001
+                });
+                // sessionStorage に保存
+                sessionStorage.setItem("responses", JSON.stringify(responses));
+
+
+                alert("確認しました。回答ページに進みます。");
+                window.location.href = "first_page.html"; // 次ページへ遷移
+            } else {
+                alert("正しく入力してください");
+            }
+        }
+
+        function downloadFile() {
+            const link = document.createElement('a');
+            link.href = 'test.pdf';
+            link.download = 'test.pdf';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
