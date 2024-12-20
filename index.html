@@ -26,6 +26,20 @@
             // 回答ページへ遷移
             window.location.href = "introduction.html";
         }
+
+        function checkDevice() {
+            const ua = navigator.userAgent.toLowerCase();// ユーザーエージェントを抽出
+            const isMobile = /android|iphone|ipad|ipod|mobile/.test(ua); // スマホ・タブレット判定
+
+        // 画面幅900px以下 または ユーザーエージェントがスマホの場合
+        if (window.innerWidth <= 900 || isMobile) {
+            alert("このページはスマートフォンではアクセスできません。PCからアクセスしてください。あるいはウィンドウサイズが小さい可能性があります。");
+            document.body.innerHTML = ""; // ページ内容を非表示にする
+        }
+        }
+
+// ページ読み込み時にデバイスをチェック
+window.onload = checkDevice;
     </script>
 </body>
 </html>

@@ -36,10 +36,13 @@
             <label for="procedure">回答手順：</label><br>
             <textarea id="procedure" name="clarity_procedure" rows="3"></textarea><br>
             
-            <label for="explanation">解釈の観点の説明：</label><br>
+            <label for="explanation">解釈の答え方：</label><br>
             <textarea id="explanation" name="clarity_explanation" rows="3"></textarea><br>
+
+            <label for="explanation_others">その他説明文章（注意事項や謝金等）：</label><br>
+            <textarea id="explanation_others" name="clarity_explanation_others" rows="3"></textarea><br>
             
-            <label for="layout">ページレイアウト：</label><br>
+            <label for="layout">ページレイアウトや機能：</label><br>
             <textarea id="layout" name="clarity_layout" rows="3"></textarea><br>
         </fieldset>
 
@@ -64,8 +67,9 @@
             const surveyResponses = [
                 { page: 101, value: document.getElementById("procedure").value || "" },
                 { page: 102, value: document.getElementById("explanation").value || "" },
-                { page: 103, value: document.getElementById("layout").value || "" },
-                { page: 104, value: document.getElementById("comments").value || "" }
+                { page: 103, value: document.getElementById("explanation_others").value || "" },
+                { page: 104, value: document.getElementById("layout").value || "" },
+                { page: 105, value: document.getElementById("comments").value || "" }
             ];
 
             // 送信先URL
