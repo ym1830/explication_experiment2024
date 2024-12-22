@@ -238,6 +238,8 @@
 
         function finishExperiment() {
             const finishButton = document.getElementById("finish-button");
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
             
             
             if (responses.length < 5) {
@@ -248,7 +250,17 @@
 
             if (confirm("回答を完了し、次の設問に移りますか？")) {
                 console.log("回答データ:", responses);
-                window.location.href = "second_page.html";
+
+                // 被験者IDの2桁目に基づいて遷移先ページを決定
+                const secondDigit = participantId.charAt(1);       
+                if (secondDigit === "1") {
+                    window.location.href = "second_page.html"; // 空間解釈ページへ遷移
+                } else if (secondDigit === "2") {
+                    window.location.href = "post_survey.html"; // 事後アンケートページへ遷移
+                } else {
+                    alert("被験者IDに対応する遷移先が見つかりません。最初からやり直してください");
+                    return;
+                }
             }
         }
 

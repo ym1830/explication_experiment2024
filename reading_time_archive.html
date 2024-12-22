@@ -14,7 +14,7 @@
     </a>    
     <ul>
       <li><strong>普段通りの読み方</strong>で一読してください</li>
-      <li><strong>何について解釈するかは後で示す</strong>ので、特に意識する必要はありません</li>
+      <li><strong>何について解釈するかは後で示す</strong>ので、意識する必要はありません</li>
       <li>回答パートで文章を参照しても良いので、<strong>記憶しようとする必要はありません</strong></li>
       <li>読み終えましたら、入力欄に文章末尾の5文字（記号を除く）を入力して進んでください</li>
     </ul>
@@ -32,22 +32,8 @@
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
 
-
-
-            // 被験者IDの1桁目に基づいて「末尾5文字」パスワードを決定
-            const firstDigit = participantId.charAt(0); 
-            let last5_pass = "";      
-            if (firstDigit === "A") {
-                last5_pass = "ったように"; // 人物解釈ページへ遷移
-            } else if (firstDigit === "B") {
-                window.location.href = "かいていた"; // 空間解釈ページへ遷移
-            } else {
-                alert("被験者IDが間違っている可能性があります。最初からやり直してください");
-                return;
-            }            
-
             // 「末尾5文字」が入力されているかチェック
-            if (input === last5_pass) {
+            if (input === "末尾5文字") {
                 responses.push({
                     id: participantId,
                     value: "read",
@@ -85,8 +71,18 @@
 
             // 被験者IDの1桁目に基づいてファイル名を決定
             const firstDigit = participantId.charAt(0);
-            const fileName = `novel_${firstDigit}_test.pdf`; // 動的にファイル名を生成
-            console.log("生成されたファイル名:", fileName);
+            let fileName = "";
+
+            if (firstDigit === "A") {
+                fileName = "novel_A_test.pdf";
+            } else if (firstDigit === "B") {
+                fileName = "novel_B_test.pdf";
+            } else {
+                alert("被験者IDに対応するファイルが見つかりません。最初からやり直してください");
+                return;
+            }
+
+            console.log("ファイル名:", fileName);
 
             const link = document.createElement('a');
             link.href = fileName;
