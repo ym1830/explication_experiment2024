@@ -51,11 +51,18 @@
             <textarea id="comments" name="additional_comments" rows="5"></textarea>
         </fieldset>
         <br>
-        <button type="button" onclick="submitSurvey()">送信</button>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <button type="button" onclick="submitSurvey()">送信</button>
+            <div id="status-message" style="color: blue;"></div>
+        </div>
     </form>
 
     <script>
         function submitSurvey() {
+            // ステータスメッセージの表示
+            const statusMessage = document.getElementById("status-message");
+            statusMessage.textContent = "送信しています...";
+
             // sessionStorageからデータを取得
             const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
 
@@ -101,10 +108,12 @@
                 body: JSON.stringify(responses)
             })
             .then(() => {
+                statusMessage.textContent = ""; // メッセージを消す
                 alert("データが送信されました。ご協力ありがとうございました。");
                 window.location.href = "thank_you.html"; // 完了ページ
             })
             .catch((error) => {
+                statusMessage.textContent = ""; // メッセージを消す
                 console.error("送信エラー:", error);
                 alert("送信中にエラーが発生しました。");
             });
