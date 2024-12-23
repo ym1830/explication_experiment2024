@@ -61,7 +61,7 @@
         function submitSurvey() {
             // ステータスメッセージの表示
             const statusMessage = document.getElementById("status-message");
-            statusMessage.textContent = "送信しています...";
+            statusMessage.textContent = "送信しています。ページを閉じずにお待ちください...";
 
             // sessionStorageからデータを取得
             const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
