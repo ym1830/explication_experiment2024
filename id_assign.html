@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ID付与ページ</title>
+</head>
+<body>
+    <h1>ID付与</h1>
+    <p id="assigned-id">IDを取得中です...</p>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbwmhBJIT6VUHF_O2b054kRshGx-kiciQJRLp0LzEHYYgLCpDHw0iCdd7R0Ix8Rk18aN/exec"; // GASの公開URL
+
+        async function fetchID() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "assign" }),
+                    headers: { "Content-Type": "application/json" }
+                });
+
+                const data = await response.json();
+                document.getElementById("assigned-id").textContent = `付与されたID: ${data.id}`;
+            } catch (error) {
+                console.error("エラー:", error);
+                document.getElementById("assigned-id").textContent = "IDの取得に失敗しました。";
+            }
+        }
+
+        // ページアクセス時にIDを取得
+        fetchID();
+    </script>
+</body>
+</html>
