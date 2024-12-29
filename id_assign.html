@@ -9,11 +9,12 @@
     <p id="assigned-id">IDを取得中です...</p>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzqLZ5c4GNDOHnhmqP6EdnPLJY-MwgSnm4sJOzJVHJ-_a5iEHAzA2qRHPAsIsWWzsJl/exec"; // GASの公開URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbwYlZ34sRvKo6pWXozDw2XILH8pfDQV5dD2n7OpfME_WylTsp2TbDgQvxFulj5nvV_1/exec"; // GASの公開URL
 
         async function fetchID() {
             try {
                 const response = await fetch(API_URL, {
+                    mode: "cors",
                     method: "POST",
                     body: JSON.stringify({ action: "assign" }),
                     headers: { "Content-Type": "application/json" }
