@@ -2,35 +2,81 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ID付与ページ</title>
+    <title>Googleスプレッドシート操作</title>
 </head>
 <body>
-    <h1>ID付与</h1>
-    <p id="assigned-id">IDを取得中です...</p>
-
+    <h1>ID取得と記録</h1>
+    <p>取得したID: <span id="assigned-id">未取得</span></p>
+    <p id="status">操作状況を表示します...</p>
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwYlZ34sRvKo6pWXozDw2XILH8pfDQV5dD2n7OpfME_WylTsp2TbDgQvxFulj5nvV_1/exec"; // GASの公開URL
+        const SPREADSHEET_ID = "1pD8EK0k-nERgYCqmorWfFUL6BQkPa6vGXCvW7tERK9s"; // スプレッドシートID
+        const API_KEY = "AIzaSyDxvB6UR7n7YYAbMXZ94HASCedvH1o7OEE"; // Google Cloud Consoleで取得したAPIキー
+        const SHEET_NAME_UNASSIGNED = "Sheet1"; // 未使用IDが格納されたシート
+        const SHEET_NAME_ASSIGNED = "Sheet2"; // 使用中IDを記録するシート
 
-        async function fetchID() {
+        // Google Sheets APIのエンドポイント
+        const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
+
+        async function fetchAndAssignID() {
             try {
-                const response = await fetch(API_URL, {
-                    mode: "cors",
-                    method: "POST",
-                    credentials: "include",
-                    body: JSON.stringify({ action: "assign" }),
-                    headers: { "Content-Type": "application/json" }
-                });
-
+                // 未使用IDを取得
+                const response = await fetch(`${SHEETS_API_URL}/${SHEET_NAME_UNASSIGNED}?key=${API_KEY}`);
                 const data = await response.json();
-                document.getElementById("assigned-id").textContent = `付与されたID: ${data.id}`;
+                const rows = data.values;
+
+                if (!rows || rows.length <= 1) {
+                    document.getElementById("status").textContent = "未使用IDがありません。";
+                    return;
+                }
+
+                // 最初の未使用IDを取得
+                const assignedID = rows[1][0]; // 2行目の1列目
+                const timestamp = new Date().toISOString();
+
+                // IDを画面に表示
+                document.getElementById("assigned-id").textContent = assignedID;
+
+                // 使用中シートにIDを記録
+                await updateSheet(assignedID, timestamp);
+
+                // 状態を更新
+                document.getElementById("status").textContent = `ID: ${assignedID} を割り当てました。`;
             } catch (error) {
                 console.error("エラー:", error);
-                document.getElementById("assigned-id").textContent = "IDの取得に失敗しました。";
+                document.getElementById("status").textContent = "エラーが発生しました。";
             }
         }
 
-        // ページアクセス時にIDを取得
-        fetchID();
+        async function updateSheet(id, timestamp) {
+            try {
+                // 使用中シートにデータを追加
+                const updateResponse = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME_ASSIGNED}:append?valueInputOption=RAW&key=${API_KEY}`,
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            range: `${SHEET_NAME_ASSIGNED}`,
+                            majorDimension: "ROWS",
+                            values: [[id, timestamp]]
+                        }),
+                    }
+                );
+
+                if (updateResponse.ok) {
+                    console.log("シートにIDを記録しました:", id);
+                } else {
+                    console.error("シートの更新に失敗しました。");
+                }
+            } catch (error) {
+                console.error("更新中にエラーが発生しました:", error);
+            }
+        }
+
+        // ページ読み込み時にIDを取得
+        fetchAndAssignID();
     </script>
 </body>
 </html>
+
+
