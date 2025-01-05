@@ -24,32 +24,103 @@
         button:hover {
             background-color: #0056b3;
         }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        fieldset {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>事後アンケート</h1>
-    <p>以下のアンケートにご協力をお願いいたします。特に記述することがなければ空欄のまま送信してください。</p>
-
+    <p>以下のアンケートにご協力をお願いいたします。感想以外は回答必須です。</p>
+    <p>次の<strong>最終ページで承認IDを表示</strong>します。必ず控えてください。</p>
     <form id="survey-form">
         <fieldset>
-            <legend>わかりやすさについて</legend>
-            <label for="procedure">回答手順：</label><br>
-            <textarea id="procedure" name="clarity_procedure" rows="3"></textarea><br>
-            
-            <label for="explanation">解釈の答え方：</label><br>
-            <textarea id="explanation" name="clarity_explanation" rows="3"></textarea><br>
+            <legend>必須回答</legend>
+            <label for="age">年齢：</label>
+            <select id="age" name="age" required>
+                <option value="" disabled selected>選択してください</option>
+                <!-- 年齢を18〜90まで選択式で設定 -->
+                <script>
+                    for (let i = 18; i <= 90; i++) {
+                        document.write(`<option value="${i}">${i}</option>`);
+                    }
+                </script>
+            </select>
 
-            <label for="explanation_others">その他説明文章（注意事項や謝金等）：</label><br>
-            <textarea id="explanation_others" name="clarity_explanation_others" rows="3"></textarea><br>
-            
-            <label for="layout">ページレイアウトや機能：</label><br>
-            <textarea id="layout" name="clarity_layout" rows="3"></textarea><br>
+            <label for="novels-per-month">
+                小説を1か月に何冊くらい読むか（電子書籍を含む）
+            </label>
+            <select id="novels-per-month" name="novels_per_month" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="読まない">読まない</option>
+                <option value="1、2冊">1、2冊</option>
+                <option value="3、4冊">3、4冊</option>
+                <option value="5、6冊">5、6冊</option>
+                <option value="7冊以上">7冊以上</option>
+            </select>
+
+            <label for="nonfiction-per-month">
+                小説以外の本を1か月に何冊くらい読むか（電子書籍を含む）
+            </label>
+            <select id="nonfiction-per-month" name="nonfiction_per_month" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="読まない">読まない</option>
+                <option value="1、2冊">1、2冊</option>
+                <option value="3、4冊">3、4冊</option>
+                <option value="5、6冊">5、6冊</option>
+                <option value="7冊以上">7冊以上</option>
+            </select>
+
+            <label for="monthly-reading">本以外の文字・活字（SNS、ネット記事を含む）をどのくらいの頻度で読むか：</label>
+            <select id="monthly-reading" name="monthly_reading" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="ほとんど読まない">ほとんど読まない</option>
+                <option value="月に数日読む">月に数日読む</option>
+                <option value="週に1、2日読む">週に1、2日読む</option>
+                <option value="週に3~5日読む">週に3~5日読む</option>
+                <option value="毎日読む">毎日読む</option>
+            </select>
+
+            <label for="genres">好きな小説ジャンルは何か（特になし、でも可）：</label>
+            <textarea id="genres" name="genres" rows="3" required></textarea>
+
+            <label for="reading-difficulty">読むこと全般に苦手意識はあるか：</label>
+            <select id="reading-difficulty" name="reading_difficulty" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="ある">ある</option>
+                <option value="ない">ない</option>
+            </select>
+
+            <label for="experiment-difficulty">本実験の文章の難易度はどうであったか：</label>
+            <select id="experiment-difficulty" name="experiment_difficulty" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="とても難しい">とても難しい</option>
+                <option value="難しい">難しい</option>
+                <option value="普通">普通</option>
+                <option value="簡単">簡単</option>
+                <option value="とても簡単">とても簡単</option>
+            </select>
+
+            <label for="visualization">普段はイメージを思い浮かべながら読むか：</label>
+            <select id="visualization" name="visualization" required>
+                <option value="" disabled selected>選択してください</option>
+                <option value="よく思い浮かべる">よく思い浮かべる</option>
+                <option value="時々思い浮かべる">時々思い浮かべる</option>
+                <option value="あまり思い浮かべない">あまり思い浮かべない</option>
+                <option value="全く思い浮かべない">全く思い浮かべない</option>
+            </select>
         </fieldset>
 
         <fieldset>
-            <legend>その他感想，疑問点，問題点</legend>
-            <textarea id="comments" name="additional_comments" rows="5"></textarea>
+            <legend>自由回答</legend>
+            <label for="comments">実験の感想：</label>
+            <textarea id="comments" name="comments" rows="5"></textarea>
         </fieldset>
+
         <br>
         <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
             <button type="button" onclick="submitSurvey()">回答を送信</button>
@@ -58,34 +129,109 @@
     </form>
 
     <script>
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        // 既存データを読み込むか新規作成
+        let responses = JSON.parse(sessionStorage.getItem("responses")) || [];         
+        // ページ読み込み時の時間を記録
+        window.onload = () => {
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+            // 回答を配列に保存
+            responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
+                id: participantId,
+                value: 99, 
+                time: timestamp,
+                page: 99 // ページフラグを追加 
+            }); // 回答内容とタイムスタンプを保存
+            // sessionStorage に保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+        };        
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+            if (allowNavigation) {
+                // フラグが true の場合は警告を出さない
+                return;
+            }
+            // 警告メッセージを設定
+            const message = "このページを離れますか？実験が正常に終了できません。";
+
+            // 標準的なブラウザの挙動のために以下を設定
+            event.preventDefault();
+            event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+
+            return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+        });
+
         function submitSurvey() {
+            //必須回答の回答チェック
+            const requiredFields = ["age", "novels-per-month", "nonfiction-per-month", "monthly-reading", "genres", "reading-difficulty", "experiment-difficulty", "visualization"];
+            let isValid = true;
+
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value) {
+                    isValid = false;
+                    field.style.border = "2px solid red"; // ハイライト
+                } else {
+                    field.style.border = ""; // 正常に戻す
+                }
+            });
+            if (!isValid) {
+                alert("必須項目をすべて入力してください。");
+                return;
+            }
+
             // ステータスメッセージの表示
             const statusMessage = document.getElementById("status-message");
-            statusMessage.textContent = "送信しています。ページを閉じずにお待ちください...";
+            statusMessage.textContent = "送信しています。ページを閉じずにしばらくお待ちください...";
 
             // sessionStorageからデータを取得
             const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
-
+            
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
             
             // アンケートデータを取得
             // 設問1-4の回答データを取得し、page101~104として保存
             const surveyResponses = [
-                { page: 101, value: document.getElementById("procedure").value || "" },
-                { page: 102, value: document.getElementById("explanation").value || "" },
-                { page: 103, value: document.getElementById("explanation_others").value || "" },
-                { page: 104, value: document.getElementById("layout").value || "" },
-                { page: 105, value: document.getElementById("comments").value || "" }
+                { page: 101, value: document.getElementById("age").value || "" },
+                { page: 102, value: document.getElementById("novels-per-month").value || "" },
+                { page: 103, value: document.getElementById("nonfiction-per-month").value || "" },
+                { page: 104, value: document.getElementById("monthly-reading").value || "" },
+                { page: 105, value: document.getElementById("genres").value || "" },
+                { page: 106, value: document.getElementById("reading-difficulty").value || "" },
+                { page: 107, value: document.getElementById("experiment-difficulty").value || "" },
+                { page: 108, value: document.getElementById("visualization").value || "" },
+                { page: 109, value: document.getElementById("comments").value || "" }
             ];
 
-            // 送信先URL
-            const url = "https://script.google.com/macros/s/AKfycbwvHega0bKUgBwGr0stfSOqzHMbGky9_6ET8rZPotPwg2A8Bzx62ZRnXruB7f8BPoyiIQ/exec"; // Google Apps ScriptのデプロイURL
 
+            // 回答送信URL
+            const send_url = "https://script.google.com/macros/s/AKfycbwXTBC8Ejjiw51-KrwdZnaRS6nOX-Cz8cFJhi1ihjR3OmYyiBPwhhmH8FT5i8F9d7U3eg/exec"; // 回答結果送信用GASのURL
 
             // 現在のresponsesに追加
             surveyResponses.forEach(response => {
                 responses.push({
+                    IP: userIP,
+                    browserID: uniqueID,
+                    username: username,
                     id: participantId,
                     value: response.value,
                     time: new Date().toISOString(),
@@ -99,7 +245,7 @@
             console.log("送信前のresponsesデータ:", responses)
 
             // データ送信
-            fetch(url, {
+            fetch(send_url, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -110,6 +256,8 @@
             .then(() => {
                 statusMessage.textContent = ""; // メッセージを消す
                 alert("データが送信されました。ご協力ありがとうございました。");
+                // ページ遷移を許可
+                allowNavigation = true;
                 window.location.href = "thank_you.html"; // 完了ページ
             })
             .catch((error) => {
@@ -117,6 +265,49 @@
                 console.error("送信エラー:", error);
                 alert("送信中にエラーが発生しました。");
             });
+
+            complete();
+        }
+
+        // GASに操作リクエストを送信
+        async function sendToGAS(action, id = null, browserID = null) {
+            // ID管理URL
+            const id_manage_URL = "https://script.google.com/macros/s/AKfycbyQqIFTm5pJ2FFeMDXgTB4xrCud1Po08UvCfpc2q89j-xqRQz3KxhpW-hjFzxuoAtCt/exec"; // ID管理用GASのウェブアプリURL
+            try {
+                const body = { action }; // アクションを指定
+                if (id) body.id = id; // 必要に応じてIDを指定
+                if (browserID) body.browserID = browserID; // 必要に応じてIDを指定
+
+                // GASにPOSTリクエストを送信
+                await fetch(id_manage_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                    mode: "no-cors", // CORSを回避
+                });
+
+                document.getElementById("status-message").textContent = `GASに${action}リクエストを送信しました。`;
+            } catch (error) {
+                console.error("GAS通信エラー:", error);
+                document.getElementById("status-message").textContent = "GAS通信中にエラーが発生しました。";
+            }
+        }
+        // 回答完了処理とリサイクルの実行
+        async function complete() {
+            const id = localStorage.getItem("participantId") || "Unknown";// 現在のIDを取得
+            const browserID = localStorage.getItem("browserID") || "Unknown";
+            if (!id || id === "未取得") {
+                document.getElementById("status-message").textContent = "IDが取得されていません。";
+                return;
+            }
+            console.log("id:", id)
+            console.log("browserID:", browserID)
+
+            // 回答完了処理
+            await sendToGAS("complete", id, browserID);
+
+            // リサイクル処理
+            await sendToGAS("recycle");
         }
     </script>
 </body>

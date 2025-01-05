@@ -17,5 +17,25 @@
 <body>
     <h1>ご協力ありがとうございました！</h1>
     <p>これで実験は終了です。</p>
+    <p>以下の承認IDを、クラウドワークスのアンケートフォームに入力してください。</p>
+    <p><big>承認ID：gyhikHygUY</big></p>
+    <script>
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+        if (allowNavigation) {
+            // フラグが true の場合は警告を出さない
+            return;
+        }
+        // 警告メッセージを設定
+        const message = "このページを離れますか？承認IDを控えましたか？";
+    
+        // 標準的なブラウザの挙動のために以下を設定
+        event.preventDefault();
+        event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+    
+        return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+            });
+    </script>
 </body>
 </html>

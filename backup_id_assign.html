@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ID取得</title>
+</head>
+<body>
+    <h1>ID取得と記録</h1>
+    <p>取得したID: <span id="assigned-id">未取得</span></p>
+    <p id="status">操作状況を表示します...</p>
+    <p>以下にクラウドワークスのユーザー名を入力してください。</p>
+    <input type="text" id="username" placeholder="ユーザー名を入力" required>
+    <button onclick="saveUserName()">次へ進む</button>
+    <script>
+        const SPREADSHEET_ID = "1pD8EK0k-nERgYCqmorWfFUL6BQkPa6vGXCvW7tERK9s"; // スプレッドシートID
+        const API_KEY = "AIzaSyDxvB6UR7n7YYAbMXZ94HASCedvH1o7OEE"; // Google Cloud Consoleで取得したAPIキー
+        const SHEET_NAME_UNASSIGNED = "Sheet1"; // 未使用IDが格納されたシート
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwS1YaV4-nqmtvZjLtaRWITWg-9JnCtJbaxTiwByk5K89txORwYQcPnkTHY1ZhJjZr0/exec"; // GASのウェブアプリURL
+
+        // Google Sheets APIのエンドポイント
+        const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
+
+        async function fetchAndAssignID() {
+            try {
+                // **未使用IDを取得**
+                const response = await fetch(`${SHEETS_API_URL}/${SHEET_NAME_UNASSIGNED}?key=${API_KEY}`);
+                const data = await response.json();
+                const rows = data.values;
+
+                if (!rows || rows.length <= 1) {
+                    document.getElementById("status").textContent = "未使用IDがありません。実験が終了している可能性があります。";
+                    return;
+                }
+
+                // 最初の未使用IDを取得
+                const assignedID = rows[1][0]; // Sheet1の2行目の1列目
+                document.getElementById("assigned-id").textContent = assignedID;
+
+                // **GASで書き込み処理を実行**
+                await sendToGAS("assign", assignedID);
+                // 被験者IDをlocalStorageに保存
+                localStorage.setItem("participantId", assignedID);
+                console.log("保存されたID:", assignedID);
+
+                // 同一ブラウザからのアクセスを記録する用
+                if (!localStorage.getItem("browserID")) {
+                    const uniqueID = `user-${Date.now()}`;
+                    localStorage.setItem("browserID", uniqueID);
+                }
+                console.log("User ID:", localStorage.getItem("userID"));
+
+
+            } catch (error) {
+                console.error("エラー:", error);
+                document.getElementById("status").textContent = "エラーが発生しました。";
+            }
+        }
+
+        // GASに操作リクエストを送信
+        async function sendToGAS(action, id = null) {
+            try {
+                const body = { action }; // アクションを指定
+                if (id) body.id = id; // 必要に応じてIDを指定
+
+                // GASにPOSTリクエストを送信
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                    mode: "no-cors", // CORSを回避
+                });         
+                document.getElementById("status").textContent = `GASに${action}リクエストを送信しました。`;
+            } catch (error) {
+                console.error("GAS通信エラー:", error);
+                document.getElementById("status").textContent = "通信中にエラーが発生しました。";
+            }
+        }
+        // 回答完了処理とリサイクルの実行
+        async function completeAndRecycle() {
+            const id = document.getElementById("assigned-id").textContent; // 現在のIDを取得
+            if (!id || id === "未取得") {
+                document.getElementById("status").textContent = "IDが取得されていません。";
+                return;
+            }
+
+            // 回答完了処理
+            await sendToGAS("complete", id);
+
+            // リサイクル処理
+            await sendToGAS("recycle");
+        }
+
+        function saveUserName() {
+            const username = document.getElementById("username").value.trim();
+
+            if (!username) {
+                alert("ユーザー名を入力してください。");
+                return;
+            }
+
+            // ユーザーIPを取得してから保存
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const userIP = data.ip; // IPアドレスを取得
+                    console.log("User IP:", userIP);
+
+                    // 被験者IDをlocalStorageに保存
+                    localStorage.setItem("username", username);
+                    console.log("保存されたusername:", username);
+
+                    // ユーザーIPをlocalStorageに保存
+                    localStorage.setItem("IP", userIP);
+                    console.log("保存されたIP:", userIP);
+                    // 回答ページへ遷移
+                    window.location.href = "introduction.html";
+                })
+                .catch(error => {
+                    console.error("IP取得中にエラーが発生:", error);
+                });
+        }
+
+        // ページ読み込み時に処理を実行
+        fetchAndAssignID();
+    </script>
+
+    <!-- デバッグ用ボタン -->
+    <button onclick="completeAndRecycle()">回答完了 & リサイクル実行</button>
+</body>
+</html>

@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>読書パート1</title>
+    <title>読書パート2</title>
 </head>
 <body>
-    <h1>読書パート1</h1>
+    <h1>読書パート2</h1>
     <h1>手順</h1>
     <ul>
       <li>まず文章ファイルを以下からダウンロードして開いてください</li>
@@ -25,12 +25,12 @@
     <button onclick="checkInputAndProceed()">回答へ進む</button>
 
     <script>
-        const currentPage = 1001; // 現在のページ番号
+        const currentPage = 1002; // 現在のページ番号
         let allowNavigation = false; // ページ遷移を許可するフラグ
         // ページ読み込み時の時間を記録
         window.onload = () => {
             // 既存データを読み込むか新規作成
-            let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
+            let responses = JSON.parse(sessionStorage.getItem("responses")) || [];            
             // IP呼び出し
             const userIP = localStorage.getItem("IP") || "Unknown";            
             // ブラウザ固有ID呼び出し
@@ -69,8 +69,8 @@
 
 
 
-            // 被験者IDの1桁目と2桁目に基づいて値を割り当てる
-            const file_tag = participantId.slice(0, 2); // 1桁目と2桁目を取得
+            // 被験者IDの3桁目と4桁目に基づいて値を割り当てる
+            const file_tag = participantId.slice(2, 4); // 3桁目と4桁目を取得
             const mappings = {
                 A1: "ちになった",
                 A2: "ちになった",
@@ -114,16 +114,16 @@
                 alert("確認しました。回答ページに進みます。");
                 alert("回答ページは10分間の制限時間があります。休憩はできません");
 
-                // 被験者IDの9桁目に基づいて遷移先ページを決定（9~12が遷移先タグ）
-                const nextpage_tag = participantId.charAt(8); // 0が1桁目      
+                // 被験者IDの10桁目に基づいて遷移先ページを決定（9~12が遷移先タグ）
+                const nextpage_tag = participantId.charAt(9); // 0が1桁目      
                 if (nextpage_tag === "1") {
                     // ページ遷移を許可
                     allowNavigation = true;
-                    window.location.href = "protagonist1.html"; // 人物解釈ページへ遷移
+                    window.location.href = "protagonist2.html"; // 人物解釈ページへ遷移
                 } else if (nextpage_tag === "2") {
                     // ページ遷移を許可
                     allowNavigation = true;                    
-                    window.location.href = "space1.html"; // 空間解釈ページへ遷移
+                    window.location.href = "space2.html"; // 空間解釈ページへ遷移
                 } else {
                     alert("被験者IDに対応する遷移先が見つかりません。最初からやり直してください");
                     return;
@@ -141,8 +141,8 @@
                 return;
             }
             allowNavigation = true;
-            // 被験者IDの1,2桁目に基づいてファイル名を決定
-            const file_tag = participantId.slice(0, 2); // 1桁目と2桁目を取得
+            // 被験者IDの3,4桁目に基づいてファイル名を決定
+            const file_tag = participantId.slice(2, 4); // 1桁目と2桁目を取得
             const fileName = `novel_${file_tag}.pdf`; // 動的にファイル名を生成
             console.log("生成されたファイル名:", fileName);
 

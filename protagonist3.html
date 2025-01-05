@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>解釈実験ページ2</title>
+    <title>解釈実験ページ1</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,8 +37,8 @@
     </style>
 </head>
 <body>
-    <h1>解釈実験</h1>
-    <h2>空間の解釈を回答してください</h2>
+    <h1>解釈回答3</h1>
+    <h2>主人公の解釈を回答してください</h2>
 
     
     <h3>回答手順</h3>
@@ -49,6 +49,7 @@
             <li>文章を一読する</li>
             <li>本文章の解釈を<strong>【語句の形式】</strong>で入力する</li>
                 <ul>
+                    <li>語句とは<strong>「単語や短いフレーズ」</strong>を指します（例：たくあん、黄色い、歯ごたえがある）</li>
                     <li>具体的な答え方は以降の「解釈の答え方」で述べます</li>
                 </ul>
             <li>語句を1つ入力したら<strong>「確定」</strong>ボタンを押す<strong>（確定後の修正不可）</strong></li>
@@ -80,16 +81,18 @@
                         <li>解釈の抽象度は問いません。抽象的な印象でも、固有名詞でも構いません</li>
                         <li>同じ事柄に関して複数の解釈を回答することもできます</li>
                     </ul>
-
                 </ul>
             </ul>
     </details>
 
     <h3>【注意事項】</h3>
-    <ul><li>回答中に休憩を挟まないでください。回答ページで<strong>10分経過すると新たな回答が不可能</strong>になります</li></ul>
+    <ul>
+        <li>回答数と回答時間には下限があります。条件を満たすまで進行できません</li>
+        <li>回答中に休憩を挟まないでください。回答ページで<strong>10分経過すると新たな回答が不可能</strong>になります</li>
+    </ul>
     <p>--------------------------------------------------------------------------------------</p>
     <!-- 入力欄と確定ボタン -->
-    <p><big><strong>【入力欄はこちら（「空間」の解釈を「語句」で回答）】</strong></big></p>
+    <p><big><strong>【入力欄はこちら（「主人公」の解釈を「語句」で回答）】</strong></big></p>
     <div class="response-container">
         <input type="text" id="current-input" placeholder="ここに入力してください" />
         <button id="confirm-button" onclick="confirmInput()">確定</button>
@@ -100,14 +103,13 @@
     <p>↓過去の回答↓</p>
     <div id="response-list"></div>
     <p>現在の回答数: <span id="response-count">0</span></p>
+
     <p>--------------------------------------------------------------------------------------</p>
-
-
     <!-- 回答を完了するボタン -->
     <p>解釈が思いつかなくなりましたら、【回答を完了する】を押してください。</p>
     <p>※極端に回答が少ない場合、回答を完了できません。</p>
-    <div style="position: relative; display: inline-block;">
-        <button id="finish-button" onclick="finishExperiment()" disabled>回答を完了する</button>
+    <div style="position: relative; display: inline-block; padding: 0; margin: 0;">
+        <button id="finish-button" onclick="finishExperiment()" disabled style="padding: 10px 20px; margin: 0;">回答を完了する</button>
         <div id="overlay" style="
             position: absolute; 
             top: 0; left: 0; 
@@ -116,45 +118,89 @@
             cursor: not-allowed;">
         </div>
     </div>
-    
-    <button id="download-button" onclick="downloadResponses()">データをダウンロード</button>
-
 
     <script>
-        const currentPage = 2; // 現在のページ番号
+        // 被験者IDを取得
+        const participantId = localStorage.getItem("participantId");
+        // 被験者IDの5,6桁目に基づいてファイル名を決定
+        const file_tag = participantId.slice(4, 6); // 5桁目と6桁目を取得
+        const currentPage = `${file_tag}1`; // ページ番号生成
+
+
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        const minTime = 0.1 * 60 * 1000; // 回答時間下限
+        const maxTime = 10 * 60 * 1000; // 回答時間上限
+
+        // 初期状態でボタンを無効化し、スタイルを灰色に設定
+        const finishButton = document.getElementById("finish-button");
+        const overlay = document.getElementById("overlay");
+        finishButton.disabled = true;
+        overlay.style.display = "block";
+        overlay.style.backgroundColor = "rgba(128, 128, 128, 0.5)";
+        // 5分経過を記録するフラグ
+        let isTimeOverMin = false;
+        // 10分経過を記録するフラグ
+        let isTimeOverMax = false;
+        // 既存データを読み込むか新規作成
+        let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
 
         // ページ読み込み時に過去の回答を表示
         window.onload = () => {
-            displayResponses(currentPage); // 現在のページの回答のみ表示
-
-            const currentPageResponses = responses.filter(response => response.page === currentPage);
-            document.getElementById("response-count").textContent = currentPageResponses.length;
+            displayResponses(currentPage); // 現在のページを表示
+            // 以下、ページ読み込み時の時間記録
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+            // 回答を配列に保存
+            responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
+                id: participantId,
+                value: currentPage, 
+                time: timestamp,
+                page: 99 // ページフラグを追加 
+            }); // 回答内容とタイムスタンプを保存
+            // sessionStorage に保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
         };
 
-        // 10分後に入力を無効化するタイマー
+        // 5分後にボタンを有効化、もし回答数が5以上であればoverlay無効化
         setTimeout(() => {
+            isTimeOverMin = true;
+            const updatedPageResponses = responses.filter(response => response.page === currentPage);
+            if (isTimeOverMin && updatedPageResponses.length >= 5) {
+                finishButton.disabled = false; // ボタンを有効化
+                overlay.style.display = "none"; // オーバーレイを無効化
+            }
+        }, minTime); // 5分
+
+        // 10分後に回答数をチェックして適切な処理を実行
+        setTimeout(() => {
+            const currentPageResponses = responses.filter(response => response.page === currentPage);
             const inputField = document.getElementById("current-input");
             const confirmButton = document.getElementById("confirm-button");
-            
-            // 入力欄とボタンを無効化
-            inputField.disabled = true;
-            confirmButton.disabled = true;
+            isTimeOverMax = true;// 10分後にフラグを更新
 
-            // メッセージを表示
-            alert("時間が経過したため、これ以上の回答はできません。");
-        }, 10 * 60 * 1000); // 10分 = 10 * 60 * 1000 ミリ秒
-
-        // sessionStorageからデータを読み込む
-        let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
-
-
-        document.getElementById("finish-button").addEventListener("click", () => {
-            const finishButton = document.getElementById("finish-button");
-            if (finishButton.disabled) {
-                alert("回答が5つ以上必要です。引き続きご回答をお願いします。");
+            if (currentPageResponses.length < 5) {
+                // 回答数が5個に満たない場合、入力を再有効化
+                alert("回答数が5個に満たないため、引き続き回答をお願いします。");
+                inputField.disabled = false;
+                confirmButton.disabled = false;
+            } else {
+                // 回答数が5個以上の場合、入力を無効化
+                alert("時間が経過したため、これ以上の回答はできません。");
+                inputField.disabled = true;
+                confirmButton.disabled = true;
             }
-        });
-
+        }, maxTime); // 10分
 
         // 回答を表示する関数（現在のページのみ表示）
         function displayResponses(currentPage) {
@@ -166,17 +212,21 @@
             responseList.innerHTML = currentPageResponses
                 .map(response => `<input type="text" value="${response.value}" class="readonly-input" disabled><br>`)
                 .join('');
-        }
-        
+        }        
 
+        // 回答を追加する関数
         function confirmInput() {
             const inputField = document.getElementById("current-input");
             const errorMessage = document.getElementById("error-message");
             const inputValue = inputField.value.trim();
+            const confirmButton = document.getElementById("confirm-button");// 確定ボタン
             
 
-            // 2ページ目のデータだけで重複判定
+            // 1ページ目のデータだけで重複判定
+            console.log("responses配列の中身:", responses);
             const currentPageResponses = responses.filter(response => response.page === currentPage);
+            console.log("現在のページの回答:", currentPageResponses);
+            console.log("現在のページの回答数:", currentPageResponses.length);
             if (currentPageResponses.some(response => response.value === inputValue)) {
                 errorMessage.textContent = "このページ内ですでに入力された内容です。";
                 return;
@@ -191,19 +241,27 @@
             // エラーメッセージをリセット
             errorMessage.textContent = "";
 
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
-
 
             // タイムスタンプ取得
             const timestamp = new Date().toISOString();
 
             // 回答を配列に保存
             responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
                 id: participantId,
                 value: inputValue, 
                 time: timestamp,
-                page: currentPage // ページ情報 
+                page: currentPage // ページフラグを追加 
             }); // 回答内容とタイムスタンプを保存
 
             // sessionStorage に保存
@@ -212,25 +270,34 @@
             // リスト表示をリフレッシュ
             displayResponses(currentPage);
 
-            const responseItem = document.createElement("input"); // 新しい input 要素を作成
+            // responseItemの作成と表示
+            const responseItem = document.createElement("input");
             responseItem.type = "text";
-            responseItem.value = inputValue; // 入力内容をセット
-            responseItem.className = "readonly-input"; // 読み取り専用のクラスを追加
-            responseItem.disabled = true; // 編集不可に設定
+            responseItem.value = inputValue;
+            responseItem.className = "readonly-input";// 読み取り専用のクラスを追加
+            responseItem.disabled = true;// 編集不可に設定
 
-            // 回答数の更新（累計）
-            // document.getElementById("response-count").textContent = responses.length + 1;
-            // 回答数の更新（そのページのみ）
+            // 回答数の更新
+            // document.getElementById("response-count").textContent = currentPageResponses.length+1;
+            // 回答数の更新（表示ページ内だけ）
             const updatedPageResponses = responses.filter(response => response.page === currentPage);
             document.getElementById("response-count").textContent = updatedPageResponses.length;
+
+            // 条件: 10分経過後かつ回答数が5以上の場合
+            if (isTimeOverMax && updatedPageResponses.length >= 5) {
+                alert("回答数が下限に達しました。時間が経過したため、これ以上の回答はできません。「回答を完了するを押してください」");
+                inputField.disabled = true;
+                confirmButton.disabled = true;
+            }
 
             // 回答数が5以上なら完了ボタンを有効化
             const finishButton = document.getElementById("finish-button");
             const overlay = document.getElementById("overlay");
 
-            if (updatedPageResponses.length >= 5) {
+            if (isTimeOverMin && updatedPageResponses.length >= 5) {
                 finishButton.disabled = false; // ボタンを有効化
-                overlay.style.display = "none"; // オーバーレイを非表示にする
+                overlay.style.display = "none"; // オーバーレイを無効化
+                console.log("完了ボタン有効化:", updatedPageResponses);
             } else {
                 finishButton.disabled = true; // ボタンを無効化（念のため）
                 overlay.style.display = "block"; // オーバーレイを表示する
@@ -239,7 +306,6 @@
             // 入力欄をリセット
             inputField.value = "";
         }
-
 
         function finishExperiment() {
             const finishButton = document.getElementById("finish-button");
@@ -253,14 +319,16 @@
             }
 
 
-            if (confirm("回答を完了し、次の設問に移りますか")) {
+            if (confirm("回答を完了し、次の設問に移りますか？")) {
                 console.log("回答データ:", responses);
-                // 被験者IDの2桁目に基づいて遷移先ページを決定
-                const secondDigit = participantId.charAt(1);       
-                if (secondDigit === "1") {
-                    window.location.href = "post_survey.html"; // 事後アンケートページへ遷移
-                } else if (secondDigit === "2") {
-                    window.location.href = "first_page.html"; // 人物解釈ページへ遷移
+                // 被験者IDの11桁目に基づいて遷移先ページを決定
+                const nextpage_tag = participantId.charAt(10);       
+                if (nextpage_tag === "1") {
+                    allowNavigation = true;// ページ遷移を許可                  
+                    window.location.href = "space3.html"; // 空間解釈ページへ遷移
+                } else if (nextpage_tag === "2") {
+                    allowNavigation = true;// ページ遷移を許可
+                    window.location.href = "reading_time_4.html"; // 4つ目の文章へ遷移
                 } else {
                     alert("被験者IDに対応する遷移先が見つかりません。最初からやり直してください");
                     return;
@@ -268,28 +336,22 @@
             }
         }
 
-        
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+            if (allowNavigation) {
+                // フラグが true の場合は警告を出さない
+                return;
+            }
+            // 警告メッセージを設定
+            const message = "このページを離れますか？実験が正常に終了できません。";
 
+            // 標準的なブラウザの挙動のために以下を設定
+            event.preventDefault();
+            event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
 
-        function downloadResponses() {
-            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
-            // CSVのヘッダー行
-            let csvContent = "data:text/csv;charset=utf-8,ID,回答内容,タイムスタンプ,ページ\n";
-            
-            // 各回答をCSV形式に追加
-            responses.forEach(response => {
-                csvContent += `${response.id},${response.value},${response.time},${response.page}\n`;
-            });
-            
-            // ダウンロードリンクの生成
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "responses.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+            return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+        });
     </script>
 </body>
 </html>
+

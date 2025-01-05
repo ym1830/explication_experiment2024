@@ -2,44 +2,190 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>被験者ID入力</title>
+    <title>ID取得</title>
 </head>
 <body>
-    <h1>被験者ID入力</h1>
-    <p>以下に被験者IDを入力してください（事前共有したものをコピーして貼り付けてください）。</p>
-    <input type="text" id="participant-id" placeholder="半角数字で入力" required>
-    <button onclick="saveParticipantID()">次へ進む</button>
-
+    <h1>ユーザー名入力</h1>
+    <p>識別用ID（承認IDは回答後に表示）: <span id="assigned-id">ID取得中．．．しばらくお待ちください</span></p>
+    <p id="status">操作状況を表示します...</p>
+    <p>以下に、<strong>クラウドワークスのユーザー名</strong>を入力してください。</p>
+    <input type="text" id="username" placeholder="ユーザー名を入力" required>
+    <button onclick="saveUserName()">次へ進む</button>
     <script>
-        function saveParticipantID() {
-            const participantId = document.getElementById("participant-id").value.trim();
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        console.log("allowNavigation:", allowNavigation);
+        // ページを離れる前に警告を表示
+        document.addEventListener("DOMContentLoaded", () => {
+            window.addEventListener("beforeunload", function (event) {
+                if (allowNavigation) {
+                    // フラグが true の場合は警告を出さない
+                    return;
+                }
+                // 警告メッセージを設定
+                const message = "このページを離れますか？実験が正常に終了できません。";
 
-            if (!participantId) {
-                alert("被験者IDを入力してください。");
+                // 標準的なブラウザの挙動のために以下を設定
+                event.preventDefault();
+                event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+                return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+            });
+        });
+
+        const SPREADSHEET_ID = "1pD8EK0k-nERgYCqmorWfFUL6BQkPa6vGXCvW7tERK9s"; // スプレッドシートID
+        const API_KEY = "AIzaSyDxvB6UR7n7YYAbMXZ94HASCedvH1o7OEE"; // Google Cloud Consoleで取得したAPIキー
+        const SHEET_NAME_UNASSIGNED = "Sheet2"; // 未使用IDが格納されたシート
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyQqIFTm5pJ2FFeMDXgTB4xrCud1Po08UvCfpc2q89j-xqRQz3KxhpW-hjFzxuoAtCt/exec"; // GASのウェブアプリURL
+
+        // Google Sheets APIのエンドポイント
+        const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
+
+        async function fetchAndAssignID() {
+            // 同一ブラウザからのアクセスを識別する用
+            if (!localStorage.getItem("browserID")) {
+                const uniqueID = `user-${Date.now()}`;
+                localStorage.setItem("browserID", uniqueID);
+            }
+            const browserID = localStorage.getItem("browserID");
+            
+            // participantId がすでに存在する場合は処理をスキップ
+            const currentTime = Date.now();// 現在時刻取得
+            // localStorageにstart_timeが存在するか確認
+            if (!localStorage.getItem("start_time")) {
+                // start_timeが存在しない場合、現在時刻を保存
+                localStorage.setItem("start_time", currentTime);
+            } else {
+                // start_timeが存在する場合、経過時間を計算
+                const startTime = parseInt(localStorage.getItem("start_time"), 10);
+                const elapsedTime = (currentTime - startTime) / (1000 * 60 * 60); // 時間に変換
+
+                // 3時間以上経過していない場合、処理をスキップ
+                if (elapsedTime < 3) {
+                    console.log("elapsedTime", elapsedTime);
+                    sendToGAS("update", null, browserID);
+                    const participantId = localStorage.getItem("participantId") || "Unknown";
+                    document.getElementById("assigned-id").textContent = participantId;
+                    console.log(`経過時間: ${elapsedTime.toFixed(2)} 時間。3時間未満のため処理をスキップします。`);
+                    document.getElementById("status").textContent = "IDは取得済みです。";
+                    return;
+                }
+
+                // 3時間以上経過している場合、新しいstart_timeを保存
+                localStorage.setItem("start_time", currentTime);
+            }
+
+
+            try {
+                // まず3時間経過したIDをリサイクル
+                await sendToGAS("recycle");
+                // **GASで書き込み処理を実行**
+                await sendToGAS("assign", null, browserID);
+
+                // **未使用IDを取得**
+                const response = await fetch(`${SHEETS_API_URL}/${SHEET_NAME_UNASSIGNED}?key=${API_KEY}`);
+                const data = await response.json();
+                
+                if (!data.values || data.values.length === 0) {
+                    console.error("未使用IDがありません。実験が終了している可能性があります。");
+                    return null;
+                }                
+
+                // browserIDで該当する行を探す
+                console.log("data:", data.values);
+                const assignedRow = data.values.find(row => row[2] === browserID);
+                if (!assignedRow) {
+                    console.error("該当するIDが見つかりません。ページを更新してください。");
+                    return null;
+                }
+
+                // 最初の未使用IDを取得
+                const assignedID = assignedRow[0]; // Sheet2の指定行の1列目
+                document.getElementById("assigned-id").textContent = assignedID;
+
+                // 被験者IDをlocalStorageに保存
+                localStorage.setItem("participantId", assignedID);
+                console.log("保存されたID:", assignedID);
+                
+                console.log("User ID:", localStorage.getItem("browserID"));
+
+
+            } catch (error) {
+                console.error("エラー:", error);
+                document.getElementById("status").textContent = "エラーが発生しました。";
+            }
+        }
+
+        // GASに操作リクエストを送信
+        async function sendToGAS(action, id = null, browserID = null) {
+            try {
+                const body = { action }; // アクションを指定
+                if (id) body.id = id; // 必要に応じてIDを指定
+                if (browserID) body.browserID = browserID; // `browserID`が指定されていれば追加
+
+                // GASにPOSTリクエストを送信
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                    mode: "no-cors", // CORSを回避
+                });         
+                document.getElementById("status").textContent = `通信完了です。`;
+            } catch (error) {
+                console.error("GAS通信エラー:", error);
+                document.getElementById("status").textContent = "通信中にエラーが発生しました。";
+            }
+        }
+
+        function saveUserName() {
+            allowNavigation = true;// ページ遷移を許可
+            const username = document.getElementById("username").value.trim();
+
+            if (!username) {
+                alert("ユーザー名を入力してください。");
+                allowNavigation = false;// ページ遷移を不許可
                 return;
             }
 
-            // 被験者IDをlocalStorageに保存
-            localStorage.setItem("participantId", participantId);
-            console.log("保存されたID:", participantId);
+            // ユーザーIPを取得してから保存
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    const userIP = data.ip; // IPアドレスを取得
+                    console.log("User IP:", userIP);
 
-            // 回答ページへ遷移
-            window.location.href = "introduction.html";
+                    // 被験者IDをlocalStorageに保存
+                    localStorage.setItem("username", username);
+                    console.log("保存されたusername:", username);
+
+                    // ユーザーIPをlocalStorageに保存
+                    localStorage.setItem("IP", userIP);
+                    console.log("保存されたIP:", userIP);
+                    // 回答ページへ遷移
+                    window.location.href = "introduction.html";
+                })
+                .catch(error => {
+                    console.error("IP取得中にエラーが発生:", error);
+                    allowNavigation = false;// ページ遷移を不許可
+                });
         }
 
         function checkDevice() {
             const ua = navigator.userAgent.toLowerCase();// ユーザーエージェントを抽出
             const isMobile = /android|iphone|ipad|ipod|mobile/.test(ua); // スマホ・タブレット判定
 
-        // 画面幅900px以下 または ユーザーエージェントがスマホの場合
-        if (window.innerWidth <= 900 || isMobile) {
-            alert("このページはスマートフォンではアクセスできません。PCからアクセスしてください。あるいはウィンドウサイズが小さい可能性があります。");
-            document.body.innerHTML = ""; // ページ内容を非表示にする
-        }
+            // 画面幅900px以下 または ユーザーエージェントがスマホの場合
+            if (window.innerWidth <= 900 || isMobile) {
+                alert("このページはスマートフォンではアクセスできません。PCからアクセスしてください。あるいはウィンドウサイズが小さい可能性があります。");
+                document.body.innerHTML = ""; // ページ内容を非表示にする
+            }
         }
 
-// ページ読み込み時にデバイスをチェック
-window.onload = checkDevice;
+        // ページ読み込み時にデバイスをチェック
+        window.onload = checkDevice;
+
+        // ページ読み込み時に処理を実行
+        fetchAndAssignID();
+
     </script>
+
 </body>
 </html>

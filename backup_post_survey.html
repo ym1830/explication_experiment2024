@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>事後アンケート</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>事後アンケート</h1>
+    <p>以下のアンケートにご協力をお願いいたします。特に記述することがなければ空欄のまま送信してください。</p>
+
+    <form id="survey-form">
+        <fieldset>
+            <legend>わかりやすさについて</legend>
+            <label for="procedure">回答手順：</label><br>
+            <textarea id="procedure" name="clarity_procedure" rows="3"></textarea><br>
+            
+            <label for="explanation">解釈の答え方：</label><br>
+            <textarea id="explanation" name="clarity_explanation" rows="3"></textarea><br>
+
+            <label for="explanation_others">その他説明文章（注意事項や謝金等）：</label><br>
+            <textarea id="explanation_others" name="clarity_explanation_others" rows="3"></textarea><br>
+            
+            <label for="layout">ページレイアウトや機能：</label><br>
+            <textarea id="layout" name="clarity_layout" rows="3"></textarea><br>
+        </fieldset>
+
+        <fieldset>
+            <legend>その他感想，疑問点，問題点</legend>
+            <textarea id="comments" name="additional_comments" rows="5"></textarea>
+        </fieldset>
+        <br>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+            <button type="button" onclick="submitSurvey()">回答を送信</button>
+            <div id="status-message" style="color: blue;"></div>
+        </div>
+    </form>
+
+    <script>
+        function submitSurvey() {
+            // ステータスメッセージの表示
+            const statusMessage = document.getElementById("status-message");
+            statusMessage.textContent = "送信しています。ページを閉じずにお待ちください...";
+
+            // sessionStorageからデータを取得
+            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
+            
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            
+            // アンケートデータを取得
+            // 設問1-4の回答データを取得し、page101~104として保存
+            const surveyResponses = [
+                { page: 101, value: document.getElementById("procedure").value || "" },
+                { page: 102, value: document.getElementById("explanation").value || "" },
+                { page: 103, value: document.getElementById("explanation_others").value || "" },
+                { page: 104, value: document.getElementById("layout").value || "" },
+                { page: 105, value: document.getElementById("comments").value || "" }
+            ];
+
+            // 回答送信URL
+            const send_url = "https://script.google.com/macros/s/AKfycbwXTBC8Ejjiw51-KrwdZnaRS6nOX-Cz8cFJhi1ihjR3OmYyiBPwhhmH8FT5i8F9d7U3eg/exec"; // 回答結果送信用GASのURL
+            // ID管理URL
+            const id_manage_URL = "https://script.google.com/macros/s/AKfycbwV6IbROQQG40ISESPnXHYi1c9gAWqp_lBE6hnj_adnziZ67h16GA1ZfXHGxdmmYnoT/exec"; // ID管理用GASのウェブアプリURL
+
+
+            // 現在のresponsesに追加
+            surveyResponses.forEach(response => {
+                responses.push({
+                    IP: userIP,
+                    browserID: uniqueID,
+                    username: username,
+                    id: participantId,
+                    value: response.value,
+                    time: new Date().toISOString(),
+                    page: response.page
+                });
+            });
+
+            // sessionStorageに保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+
+            console.log("送信前のresponsesデータ:", responses)
+
+            // データ送信
+            fetch(send_url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                mode: "no-cors",  // 送信だけモード．
+                body: JSON.stringify(responses)
+            })
+            .then(() => {
+                statusMessage.textContent = ""; // メッセージを消す
+                alert("データが送信されました。ご協力ありがとうございました。");
+                window.location.href = "thank_you.html"; // 完了ページ
+            })
+            .catch((error) => {
+                statusMessage.textContent = ""; // メッセージを消す
+                console.error("送信エラー:", error);
+                alert("送信中にエラーが発生しました。");
+            });
+
+            complete();
+        }
+
+        // GASに操作リクエストを送信
+        async function sendToGAS(action, id = null) {
+            try {
+                const body = { action }; // アクションを指定
+                if (id) body.id = id; // 必要に応じてIDを指定
+
+                // GASにPOSTリクエストを送信
+                await fetch(id_manage_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                    mode: "no-cors", // CORSを回避
+                });
+
+                document.getElementById("status").textContent = `GASに${action}リクエストを送信しました。`;
+            } catch (error) {
+                console.error("GAS通信エラー:", error);
+                document.getElementById("status").textContent = "GAS通信中にエラーが発生しました。";
+            }
+        }
+        // 回答完了処理とリサイクルの実行
+        async function complete() {
+            const id = localStorage.getItem("participantId") || "Unknown";// 現在のIDを取得
+            if (!id || id === "未取得") {
+                document.getElementById("status").textContent = "IDが取得されていません。";
+                return;
+            }
+
+            // 回答完了処理
+            await sendToGAS("complete", id);
+
+            // リサイクル処理
+            await sendToGAS("recycle");
+        }
+    </script>
+</body>
+</html>

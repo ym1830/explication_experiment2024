@@ -29,8 +29,9 @@ for _ in range(participants_per_group):
     # Assign samples to 3 participants in each cycle
     for i in range(3):
         selected_samples = [sample_lists[group].pop() for group in sample_lists]
+        random.shuffle(selected_samples) # サンプルの順序をランダム化
         order_tags = [str(random.randint(1, 2)) for _ in range(samples_per_participant)]
-        participant_id = participant_ids.pop(0) + '01'  # 末尾に '01' を追加　# 1回だけpop()を実行
+        participant_id = participant_ids.pop(0)
         full_id = "".join(selected_samples) + "".join(order_tags) + participant_id
 
         all_participants.append({
