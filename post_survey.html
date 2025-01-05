@@ -207,6 +207,14 @@
             const username = localStorage.getItem("username") || "Unknown";
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
+            // 累積回答数呼び出し
+            let totalAnswerCount = parseInt(localStorage.getItem("totalAnswerCount"), 10) || 0;
+            let rewardAmount =
+                totalAnswerCount >= 95 ? 400 :
+                totalAnswerCount >= 80 ? 300 :
+                totalAnswerCount >= 65 ? 200 :
+                totalAnswerCount >= 50 ? 100 : 0;
+            const rewardResult = `${rewardAmount}円（回答数${totalAnswerCount}個）`;
             
             // アンケートデータを取得
             // 設問1-4の回答データを取得し、page101~104として保存
@@ -219,7 +227,8 @@
                 { page: 106, value: document.getElementById("reading-difficulty").value || "" },
                 { page: 107, value: document.getElementById("experiment-difficulty").value || "" },
                 { page: 108, value: document.getElementById("visualization").value || "" },
-                { page: 109, value: document.getElementById("comments").value || "" }
+                { page: 109, value: document.getElementById("comments").value || "" },
+                { page: 110, value: rewardResult || "" }
             ];
 
 
@@ -272,7 +281,7 @@
         // GASに操作リクエストを送信
         async function sendToGAS(action, id = null, browserID = null) {
             // ID管理URL
-            const id_manage_URL = "https://script.google.com/macros/s/AKfycbyQqIFTm5pJ2FFeMDXgTB4xrCud1Po08UvCfpc2q89j-xqRQz3KxhpW-hjFzxuoAtCt/exec"; // ID管理用GASのウェブアプリURL
+            const id_manage_URL = "https://script.google.com/macros/s/AKfycbyS63N1E_ZEqUhVLBk2zudS8XC-9hfyFpWhGqGLqMs-SeyB10smAFfET2dUeL7NMd5v/exec"; // ID管理用GASのウェブアプリURL
             try {
                 const body = { action }; // アクションを指定
                 if (id) body.id = id; // 必要に応じてIDを指定
@@ -286,7 +295,7 @@
                     mode: "no-cors", // CORSを回避
                 });
 
-                document.getElementById("status-message").textContent = `GASに${action}リクエストを送信しました。`;
+                document.getElementById("status-message").textContent = `${action}リクエストを送信しました。`;
             } catch (error) {
                 console.error("GAS通信エラー:", error);
                 document.getElementById("status-message").textContent = "GAS通信中にエラーが発生しました。";

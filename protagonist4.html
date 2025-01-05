@@ -123,7 +123,7 @@
         // 被験者IDを取得
         const participantId = localStorage.getItem("participantId");
         // 被験者IDの7,8桁目に基づいてファイル名を決定
-        const file_tag = participantId.slice(6, 2); // 7桁目と8桁目を取得
+        const file_tag = participantId.slice(6, 8); // 7桁目と8桁目を取得
         const currentPage = `${file_tag}1`; // ページ番号生成
 
 
@@ -320,6 +320,11 @@
 
 
             if (confirm("回答を完了し、次の設問に移りますか？")) {
+                // 累積回答数を保存
+                const currentPageResponses = responses.filter(response => response.page === currentPage);
+                let totalAnswerCount = parseInt(localStorage.getItem("totalAnswerCount"), 10) || 0;
+                totalAnswerCount += currentPageResponses.length;
+                localStorage.setItem("totalAnswerCount", totalAnswerCount);                
                 console.log("回答データ:", responses);
                 // 被験者IDの12桁目に基づいて遷移先ページを決定
                 const nextpage_tag = participantId.charAt(11);       

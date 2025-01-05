@@ -320,6 +320,11 @@
 
 
             if (confirm("回答を完了し、次の設問に移りますか？")) {
+                // 累積回答数を保存
+                const currentPageResponses = responses.filter(response => response.page === currentPage);
+                let totalAnswerCount = parseInt(localStorage.getItem("totalAnswerCount"), 10) || 0;
+                totalAnswerCount += currentPageResponses.length;
+                localStorage.setItem("totalAnswerCount", totalAnswerCount);                
                 console.log("回答データ:", responses);
                 // 被験者IDの10桁目に基づいて遷移先ページを決定
                 const nextpage_tag = participantId.charAt(9);       

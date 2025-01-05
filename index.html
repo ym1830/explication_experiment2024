@@ -8,7 +8,7 @@
     <h1>ユーザー名入力</h1>
     <p>識別用ID（承認IDは回答後に表示）: <span id="assigned-id">ID取得中．．．しばらくお待ちください</span></p>
     <p id="status">操作状況を表示します...</p>
-    <p>以下に、<strong>クラウドワークスのユーザー名</strong>を入力してください。</p>
+    <p>以下に、<strong>クラウドワークスのユーザー名</strong>を入力してください（作業状況の確認に用います）。</p>
     <input type="text" id="username" placeholder="ユーザー名を入力" required>
     <button onclick="saveUserName()">次へ進む</button>
     <script>
@@ -34,7 +34,7 @@
         const SPREADSHEET_ID = "1pD8EK0k-nERgYCqmorWfFUL6BQkPa6vGXCvW7tERK9s"; // スプレッドシートID
         const API_KEY = "AIzaSyDxvB6UR7n7YYAbMXZ94HASCedvH1o7OEE"; // Google Cloud Consoleで取得したAPIキー
         const SHEET_NAME_UNASSIGNED = "Sheet2"; // 未使用IDが格納されたシート
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyQqIFTm5pJ2FFeMDXgTB4xrCud1Po08UvCfpc2q89j-xqRQz3KxhpW-hjFzxuoAtCt/exec"; // GASのウェブアプリURL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyS63N1E_ZEqUhVLBk2zudS8XC-9hfyFpWhGqGLqMs-SeyB10smAFfET2dUeL7NMd5v/exec"; // GASのウェブアプリURL
 
         // Google Sheets APIのエンドポイント
         const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
