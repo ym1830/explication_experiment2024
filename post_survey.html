@@ -295,10 +295,10 @@
                     mode: "no-cors", // CORSを回避
                 });
 
-                document.getElementById("status-message").textContent = `${action}リクエストを送信しました。`;
+                document.getElementById("status-message").textContent = `リクエストを送信しました。しばらくお待ちください`;
             } catch (error) {
                 console.error("GAS通信エラー:", error);
-                document.getElementById("status-message").textContent = "GAS通信中にエラーが発生しました。";
+                document.getElementById("status-message").textContent = "通信中にエラーが発生しました。";
             }
         }
         // 回答完了処理とリサイクルの実行
