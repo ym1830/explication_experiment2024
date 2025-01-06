@@ -19,7 +19,11 @@
     <p>これで実験は終了です。</p>
     <p>以下の<strong>承認ID</strong>を、クラウドワークスのアンケートフォームに入力してください。</p>
     <p><big>承認ID：gyhikHygUY</big></p>
+    <p>合計回答数: <span id="answer-count">0</span></p>
     <script>
+        // 合計回答数の表示
+        let totalAnswerCount = parseInt(localStorage.getItem("totalAnswerCount"), 10) || 0;
+        document.getElementById("answer-count").textContent = totalAnswerCount;
         let allowNavigation = false; // ページ遷移を許可するフラグ
         // ページを離れる前に警告を表示
         window.addEventListener("beforeunload", function (event) {
