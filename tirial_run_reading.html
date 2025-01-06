@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>練習パート</title>
+</head>
+<body>
+    <h1>練習パート（読書パート）</h1>
+    <h1>手順</h1>
+    <ul>
+      <li>本実験は、<strong>読書パート→読解パート2つ（順序ランダムで主人公と空間）</strong>と進行します</li>
+      <li>これから、読書パートと読解パート1つ分の練習をします</li>
+      <li>まず文章ファイルを以下からダウンロードして開いてください</li>
+    </ul>
+      <button onclick="downloadFile()">ファイルをダウンロード</button>
+    </a>    
+    <ul>
+      <li><strong>普段通りの読み方</strong>で一読してください</li>
+      <li><strong>何について解釈するかは後で示す</strong>ので、特に意識する必要はありません</li>
+      <li>回答パートで文章を参照しても良いので、<strong>記憶しようとする必要はありません</strong></li>
+      <li>読み終えましたら、入力欄に文章末尾の5文字（記号を除く）を入力して進んでください</li>
+      <li>次のページでは<strong>10分経過すると新たな回答が不可能</strong>なので、休憩せずに取り組んでください</li>
+    </ul>
+    
+    <label for="read_key">入力欄</label>
+    <input type="text" id="read_key" placeholder="入力欄" required>
+    <button onclick="checkInputAndProceed()">回答へ進む</button>
+
+    <script>
+        const currentPage = 10000; // 現在のページ番号
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        // ページ読み込み時の時間を記録
+        window.onload = () => {
+            // 既存データを読み込むか新規作成
+            let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+            // 回答を配列に保存
+            responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
+                id: participantId,
+                value: currentPage, 
+                time: timestamp,
+                page: 99 // ページフラグを追加 
+            }); // 回答内容とタイムスタンプを保存
+            // sessionStorage に保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+        };        
+        function checkInputAndProceed() {
+            const input = document.getElementById("read_key").value.trim().replace(/\s+/g, "");
+            // sessionStorageからデータを取得
+            const responses = JSON.parse(sessionStorage.getItem("responses")) || [];
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";                        
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+
+
+
+            // 被験者IDの1桁目と2桁目に基づいて値を割り当てる
+            const last5_pass = 'あいうえお';
+            
+
+            // 「末尾5文字」が入力されているかチェック
+            if (input === last5_pass) {
+                responses.push({
+                    IP: userIP,
+                    browserID: uniqueID,
+                    username: username,
+                    id: participantId,
+                    value: "read",
+                    time: new Date().toISOString(),
+                    page: currentPage
+                });
+                // sessionStorage に保存
+                sessionStorage.setItem("responses", JSON.stringify(responses));
+
+
+                alert("確認しました。回答ページに進みます。");
+                alert("回答ページは10分間の制限時間があります。休憩はできません");
+
+                // 被験者IDの9桁目に基づいて遷移先ページを決定（9~12が遷移先タグ）
+                allowNavigation = true;
+                window.location.href = "trial_run_explication.html"; // 人物解釈ページへ遷移
+            } else {
+                alert("正しく入力してください");
+            }
+        }
+
+        function downloadFile() {
+            const fileName = `novel_trial.pdf`; // 動的にファイル名を生成
+            console.log("生成されたファイル名:", fileName);
+
+            const link = document.createElement('a');
+            link.href = fileName;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            allowNavigation = false;
+        }
+
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+            if (allowNavigation) {
+                // フラグが true の場合は警告を出さない
+                return;
+            }
+            // 警告メッセージを設定
+            const message = "このページを離れますか？実験が正常に終了できません。";
+
+            // 標準的なブラウザの挙動のために以下を設定
+            event.preventDefault();
+            event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+
+            return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+        });
+    </script>
+</body>
+</html>

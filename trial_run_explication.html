@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>練習ページ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .response-container {
+            margin-bottom: 10px;
+        }
+        .readonly-input {
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            width: 100%;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        #finish-button, #download-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #finish-button:hover, #download-button:hover {
+            background-color: #0056b3;
+        }
+        #error-message {
+            color: red;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>解釈回答練習</h1>
+    <h2>主人公/空間(本番はいずれか一方表記)の解釈を回答してください</h2>
+    <p><big>主人公と空間それぞれについて、いくつか回答してみてください</big></p>
+    <p><big>両方の回答方法が理解できましたら、回答を切り上げて進んでください（次ページから本番です）</big></p>
+    
+    <h3>回答手順</h3>
+    <details>
+        <summary>回答手順を表示</summary>
+            <p><big>概要：読む→「入力→確定」を繰り返す→出尽くしたら回答完了</big></p>
+            <ol>
+            <li>文章を一読する</li>
+            <li>本文章の解釈を<strong>【語句の形式】</strong>で入力する</li>
+                <ul>
+                    <li>語句とは<strong>「単語や短いフレーズ」</strong>を指します（例：たくあん、黄色い、歯ごたえがある）</li>
+                    <li>具体的な答え方は以降の「解釈の答え方」で述べます</li>
+                </ul>
+            <li>語句を1つ入力したら<strong>「確定」</strong>ボタンを押す<strong>（確定後の修正不可）</strong></li>
+            <li><strong>できる限り多く</strong>上の回答を繰り返します</li>
+            <li>解釈が思い浮かばなくなったら<strong>「回答を完了する」</strong>を押す</li>
+            </ol>
+    </details>
+
+    <h3>解釈の答え方</h3>
+    <details>
+        <summary>解釈の答え方を表示</summary>
+            <ul>
+                <li>1文章ごとに「主人公」と「空間」の解釈をしてもらいます</li>
+                <li>それぞれの回答方針を以下に示します</li>
+                <li><strong>【主人公の回答方針】</strong></li>
+                <ul>
+                    <li>主人公の内面や外見や立場、またそれらの性質や印象、などについて書くことができます</li>
+                    <ul>
+                        <li>ただし、解釈に間違いはありませんので、思いつくままに回答してください</li>
+                        <li>解釈の抽象度は問いません。抽象的な印象でも、固有名詞でも構いません</li>
+                        <li>同じ事柄に関して複数の解釈を回答することもできます</li>
+                    </ul>
+                </ul>
+                <li><strong>【空間の回答方針】</strong></li>
+                <ul>
+                    <li>空間の名称、空間にある物、空間の雰囲気や性質や印象、などについて書くことができます</li>
+                    <ul>
+                        <li>ただし、解釈に間違いはありませんので、思いつくままに回答してください</li>
+                        <li>解釈の抽象度は問いません。抽象的な印象でも、固有名詞でも構いません</li>
+                        <li>同じ事柄に関して複数の解釈を回答することもできます</li>
+                    </ul>
+                </ul>
+            </ul>
+    </details>
+
+    <h3>【注意事項】</h3>
+    <ul>
+        <li>回答数と回答時間には下限があります。条件を満たすまで進行できません（本ページでは撤廃しています）</li>
+        <li>回答中に休憩を挟まないでください。回答ページで<strong>10分経過すると新たな回答が不可能</strong>になります</li>
+    </ul>
+    <p>--------------------------------------------------------------------------------------</p>
+    <!-- 入力欄と確定ボタン -->
+    <p><big><strong>【入力欄はこちら（「主人公/空間」の解釈を「語句」で回答）】</strong></big></p>
+    <div class="response-container">
+        <input type="text" id="current-input" placeholder="ここに入力してください" />
+        <button id="confirm-button" onclick="confirmInput()">確定</button>
+        <div id="error-message"></div>
+    </div>
+
+    <!-- 回答一覧表示 -->
+    <p>↓過去の回答↓</p>
+    <div id="response-list"></div>
+    <p>現在の回答数: <span id="response-count">0</span></p>
+
+    <p>--------------------------------------------------------------------------------------</p>
+    <!-- 回答を完了するボタン -->
+    <p>解釈が思いつかなくなりましたら、【回答を完了する】を押してください。</p>
+    <p>※極端に回答が少ない場合、回答を完了できません。</p>
+    <div style="position: relative; display: inline-block; padding: 0; margin: 0;">
+        <button id="finish-button" onclick="finishExperiment()" disabled style="padding: 10px 20px; margin: 0;">回答を完了する</button>
+        <div id="overlay" style="
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background: transparent;
+            cursor: not-allowed;">
+        </div>
+    </div>
+
+    <script>
+        // 被験者IDを取得
+        const participantId = localStorage.getItem("participantId");
+        const currentPage = 10001; // ページ番号生成
+
+
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+
+        // 初期状態でボタンを無効化し、スタイルを灰色に設定
+        const finishButton = document.getElementById("finish-button");
+        const overlay = document.getElementById("overlay");
+        finishButton.disabled = false;
+        overlay.style.display = "none";
+        overlay.style.backgroundColor = "rgba(128, 128, 128, 0.5)";
+        // 既存データを読み込むか新規作成
+        let responses = JSON.parse(sessionStorage.getItem("responses")) || []; 
+
+        // ページ読み込み時に過去の回答を表示
+        window.onload = () => {
+            displayResponses(currentPage); // 現在のページを表示
+            // 以下、ページ読み込み時の時間記録
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+            // 回答を配列に保存
+            responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
+                id: participantId,
+                value: currentPage, 
+                time: timestamp,
+                page: 99 // ページフラグを追加 
+            }); // 回答内容とタイムスタンプを保存
+            // sessionStorage に保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+        };
+
+        // 回答を表示する関数（現在のページのみ表示）
+        function displayResponses(currentPage) {
+            const responseList = document.getElementById("response-list");
+            responseList.innerHTML = ""; // 一旦リストをクリア
+
+            // 現在のページのデータだけ取得してHTMLに表示
+            const currentPageResponses = responses.filter(response => response.page === currentPage);
+            responseList.innerHTML = currentPageResponses
+                .map(response => `<input type="text" value="${response.value}" class="readonly-input" disabled><br>`)
+                .join('');
+        }        
+
+        // 回答を追加する関数
+        function confirmInput() {
+            const inputField = document.getElementById("current-input");
+            const errorMessage = document.getElementById("error-message");
+            const inputValue = inputField.value.trim();
+            const confirmButton = document.getElementById("confirm-button");// 確定ボタン
+            
+
+            // 1ページ目のデータだけで重複判定
+            console.log("responses配列の中身:", responses);
+            const currentPageResponses = responses.filter(response => response.page === currentPage);
+            console.log("現在のページの回答:", currentPageResponses);
+            console.log("現在のページの回答数:", currentPageResponses.length);
+            if (currentPageResponses.some(response => response.value === inputValue)) {
+                errorMessage.textContent = "このページ内ですでに入力された内容です。";
+                return;
+            }
+
+            // 入力が空なら無視
+            if (inputValue === "") {
+                errorMessage.textContent = "入力が空です。";
+                return;
+            }
+
+            // エラーメッセージをリセット
+            errorMessage.textContent = "";
+
+            // IP呼び出し
+            const userIP = localStorage.getItem("IP") || "Unknown";            
+            // ブラウザ固有ID呼び出し
+            const uniqueID = localStorage.getItem("browserID") || "Unknown";            
+            // ユーザー名呼び出し
+            const username = localStorage.getItem("username") || "Unknown";   
+            // 被験者ID呼び出し
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+
+            // タイムスタンプ取得
+            const timestamp = new Date().toISOString();
+
+            // 回答を配列に保存
+            responses.push({ 
+                IP: userIP,
+                browserID: uniqueID,
+                username: username,
+                id: participantId,
+                value: inputValue, 
+                time: timestamp,
+                page: currentPage // ページフラグを追加 
+            }); // 回答内容とタイムスタンプを保存
+            // sessionStorage に保存
+            sessionStorage.setItem("responses", JSON.stringify(responses));
+
+            // リスト表示をリフレッシュ
+            displayResponses(currentPage);
+
+            // responseItemの作成と表示
+            const responseItem = document.createElement("input");
+            responseItem.type = "text";
+            responseItem.value = inputValue;
+            responseItem.className = "readonly-input";// 読み取り専用のクラスを追加
+            responseItem.disabled = true;// 編集不可に設定
+
+            // 回答数の更新
+            // document.getElementById("response-count").textContent = currentPageResponses.length+1;
+            // 回答数の更新（表示ページ内だけ）
+            const updatedPageResponses = responses.filter(response => response.page === currentPage);
+            document.getElementById("response-count").textContent = updatedPageResponses.length;
+
+            // 入力欄をリセット
+            inputField.value = "";
+        }
+
+        function finishExperiment() {
+            if (confirm("回答を完了し、次の設問に移りますか？")) {
+                allowNavigation = true;// ページ遷移を許可                  
+                window.location.href = "reading_time_1.html"; // 空間解釈ページへ遷移
+            }
+        }
+
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+            if (allowNavigation) {
+                // フラグが true の場合は警告を出さない
+                return;
+            }
+            // 警告メッセージを設定
+            const message = "このページを離れますか？実験が正常に終了できません。";
+
+            // 標準的なブラウザの挙動のために以下を設定
+            event.preventDefault();
+            event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+
+            return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+        });
+    </script>
+</body>
+</html>
+
