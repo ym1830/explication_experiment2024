@@ -80,6 +80,7 @@
         });
         // GASに操作リクエストを送信
         async function sendToGAS(action, id = null, browserID = null) {
+            const GAS_URL="https://script.google.com/macros/s/AKfycbwxnN5PV0rIaWXurUDHGtD4g1aKE5sPbtlUjf6naFsByag1hI5gKfwiaMdPqn_uPHfU/exec"
             try {
                 const body = { action }; // アクションを指定
                 if (id) body.id = id; // 必要に応じてIDを指定

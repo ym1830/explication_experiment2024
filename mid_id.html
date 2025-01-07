@@ -8,9 +8,10 @@
     <h1>中間ID</h1>
     <ul>
       <li>クラウドワークス側の入力時間（1時間）切れ回避のために、以下のIDを入力して一旦クラウドワークス側の作業を完了させることができます</li>
-      <li>アンケートは残り3文章分続きます</li>
-      <li>もし引き続き最後までご回答いただける意思があるものの、1時間で終わらないと判断される場合、ご利用ください</li>
-      <li>この場合、アンケート完了後の承認IDを別途メッセージ機能で送信いただくことで、作業完了とみなし、承認いたします</li>    
+      <li>アンケートは残り3文章分続きます。</li>
+      <li>もし引き続き最後までご回答いただける意思があるものの、1時間で終わらないと判断される場合、好きなタイミングでご利用ください</li>
+      <li>この場合、アンケート完了後の承認IDを別途メッセージ機能で送信いただくことで、作業完了とみなし、承認いたします</li>
+      <li>進行不可となる場合がありますので、中間ID取得後も休憩を挟まず回答を続けてください</li>     
       <li><big>中間ID：JhesrHgsHek</big></li>
     </ul>    
     <button onclick="Proceed()">アンケートを再開</button>
@@ -49,6 +50,7 @@
         });
         // GASに操作リクエストを送信
         async function sendToGAS(action, id = null, browserID = null) {
+            const GAS_URL="https://script.google.com/macros/s/AKfycbwxnN5PV0rIaWXurUDHGtD4g1aKE5sPbtlUjf6naFsByag1hI5gKfwiaMdPqn_uPHfU/exec"
             try {
                 const body = { action }; // アクションを指定
                 if (id) body.id = id; // 必要に応じてIDを指定
