@@ -87,6 +87,7 @@
                 console.log("data:", data.values);
                 const assignedRow = data.values.find(row => row[2] === browserID);
                 if (!assignedRow) {
+                    alert("未使用IDがない可能性があります。実験が終了している可能性があります。あるいは時間を空けてお試しください");
                     console.error("該当するIDが見つかりません。ページを更新してください。");
                     return null;
                 }
