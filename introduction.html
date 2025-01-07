@@ -134,7 +134,32 @@
             }); // 回答内容とタイムスタンプを保存
             // sessionStorage に保存
             sessionStorage.setItem("responses", JSON.stringify(responses));
-        };        
+        };
+
+                // フラグを削除し、pagehideを主軸に
+        window.addEventListener("pagehide", function () {
+            if (allowNavigation) {
+                // 正常なページ遷移の場合、処理をスキップ
+                return;
+            }
+
+            // 異常なページ遷移の場合、participantIdをlocalStorageから削除
+            localStorage.removeItem("participantId");
+
+            const browserID = localStorage.getItem("browserID");
+            const recycleData = JSON.stringify({ action: "fast_recycle", id: null, browserID });
+
+            if (navigator.sendBeacon) {
+                navigator.sendBeacon(
+                    "https://script.google.com/macros/s/AKfycbwxnN5PV0rIaWXurUDHGtD4g1aKE5sPbtlUjf6naFsByag1hI5gKfwiaMdPqn_uPHfU/exec",
+                    recycleData
+                );
+            } else {
+                // sendBeaconが利用できない場合のフォールバック
+                sendToGAS("fast_recycle", null, browserID);
+            }
+        });
+        
         function checkInputAndProceed() {
             const input = document.getElementById("understand_key").value.trim();
             // sessionStorageからデータを取得
@@ -147,6 +172,11 @@
             const username = localStorage.getItem("username") || "Unknown";            
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
+
+            if (participantId === "Unknown") {
+                alert("被験者IDが設定されていません。最初からやり直してください（リロードやページを戻る行為が原因となりえます）");
+                return; // 処理を終了
+            }
 
             // 「回答方法を理解した」が入力されているかチェック
             if (input === "回答方法理解回答方針理解謝金同意") {
@@ -170,6 +200,27 @@
                 window.location.href = "trial_run_reading.html"; // 次ページへ遷移
             } else {
                 alert("正しく入力してください");
+            }
+        }
+
+                // GASに操作リクエストを送信
+        async function sendToGAS(action, id = null, browserID = null) {
+            try {
+                const body = { action }; // アクションを指定
+                if (id) body.id = id; // 必要に応じてIDを指定
+                if (browserID) body.browserID = browserID; // `browserID`が指定されていれば追加
+
+                // GASにPOSTリクエストを送信
+                await fetch(GAS_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                    mode: "no-cors", // CORSを回避
+                });         
+                document.getElementById("status").textContent = `通信完了です。`;
+            } catch (error) {
+                console.error("GAS通信エラー:", error);
+                document.getElementById("status").textContent = "通信中にエラーが発生しました。";
             }
         }
 

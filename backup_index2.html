@@ -12,35 +12,14 @@
     <input type="text" id="username" placeholder="ユーザー名を入力" required>
     <button onclick="saveUserName()">次へ進む</button>
     <script>
-        let allowNavigation = false; // ページ遷移を許可するか
-        // フラグを削除し、pagehideを主軸に
-        window.addEventListener("pagehide", function () {
-            if (allowNavigation) {
-                // 正常なページ遷移の場合、処理をスキップ
-                return;
-            }
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+        console.log("allowNavigation:", allowNavigation);
+        // ページを離れる前に警告を表示
 
-            // 異常なページ遷移の場合、participantIdをlocalStorageから削除
-            localStorage.removeItem("participantId");
-
-            const browserID = localStorage.getItem("browserID");
-            const recycleData = JSON.stringify({ action: "fast_recycle", id: null, browserID });
-
-            if (navigator.sendBeacon) {
-                navigator.sendBeacon(
-                    "https://script.google.com/macros/s/AKfycbwxnN5PV0rIaWXurUDHGtD4g1aKE5sPbtlUjf6naFsByag1hI5gKfwiaMdPqn_uPHfU/exec",
-                    recycleData
-                );
-            } else {
-                // sendBeaconが利用できない場合のフォールバック
-                sendToGAS("fast_recycle", null, browserID);
-            }
-        });
-
-        // ユーザー警告のためにbeforeunloadを追加（動作しない場合でも影響なし）
+        // `beforeunload` イベントで異常離脱を検知
         window.addEventListener("beforeunload", function (event) {
             if (allowNavigation) {
-                // 正常なページ遷移ならば警告をスキップ
+                // 正常なページ遷移ならば処理をスキップ
                 return;
             }
 
@@ -51,11 +30,10 @@
             return message; // 最新ブラウザ用
         });
 
-
         const SPREADSHEET_ID = "1pD8EK0k-nERgYCqmorWfFUL6BQkPa6vGXCvW7tERK9s"; // スプレッドシートID
         const API_KEY = "AIzaSyDxvB6UR7n7YYAbMXZ94HASCedvH1o7OEE"; // Google Cloud Consoleで取得したAPIキー
         const SHEET_NAME_UNASSIGNED = "Sheet2"; // 未使用IDが格納されたシート
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwxnN5PV0rIaWXurUDHGtD4g1aKE5sPbtlUjf6naFsByag1hI5gKfwiaMdPqn_uPHfU/exec"; // GASのウェブアプリURL
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwXuTyZFDyZwgrWlMsB1ZBeEsRRbodFq47Ojf-D_AdN_lmlA47M-Go3ttWRCES6e1vJ/exec"; // GASのウェブアプリURL
 
         // Google Sheets APIのエンドポイント
         const SHEETS_API_URL = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
@@ -67,6 +45,33 @@
                 localStorage.setItem("browserID", uniqueID);
             }
             const browserID = localStorage.getItem("browserID");
+            
+            // participantId がすでに存在する場合は処理をスキップ
+            const currentTime = Date.now();// 現在時刻取得
+            // localStorageにstart_timeが存在するか確認
+            if (!localStorage.getItem("start_time")) {
+                // start_timeが存在しない場合、現在時刻を保存
+                localStorage.setItem("start_time", currentTime);
+            } else {
+                // start_timeが存在する場合、経過時間を計算
+                const startTime = parseInt(localStorage.getItem("start_time"), 10);
+                const elapsedTime = (currentTime - startTime) / (1000 * 60 * 60); // 時間に変換
+
+                // 3時間以上経過していない場合、処理をスキップ
+                if (elapsedTime < 3) {
+                    console.log("elapsedTime", elapsedTime);
+                    sendToGAS("update", null, browserID);
+                    const participantId = localStorage.getItem("participantId") || "Unknown";
+                    document.getElementById("assigned-id").textContent = participantId;
+                    console.log(`経過時間: ${elapsedTime.toFixed(2)} 時間。3時間未満のため処理をスキップします。`);
+                    document.getElementById("status").textContent = "IDは取得済みです。";
+                    return;
+                }
+
+                // 3時間以上経過している場合、新しいstart_timeを保存
+                localStorage.setItem("start_time", currentTime);
+            }
+
 
             try {
                 // まず3時間経過したIDをリサイクル

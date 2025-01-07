@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>中間ID表示</title>
+</head>
+<body>
+    <h1>中間ID</h1>
+    <ul>
+      <li>クラウドワークス側の入力時間（1時間）切れ回避のために、以下のIDを入力して一旦クラウドワークス側の作業を完了させることができます</li>
+      <li>アンケートは残り3文章分続きます</li>
+      <li>もし引き続き最後までご回答いただける意思があるものの、1時間で終わらないと判断される場合、ご利用ください</li>
+      <li>この場合、アンケート完了後の承認IDを別途メッセージ機能で送信いただくことで、作業完了とみなし、承認いたします</li>    
+      <li><big>中間ID：JhesrHgsHek</big></li>
+    </ul>    
+    <button onclick="Proceed()">アンケートを再開</button>
+
+    <script>
+        let allowNavigation = false; // ページ遷移を許可するフラグ
+       
+        function Proceed() {
+            alert("アンケートを再開します。");
+            allowNavigation = true;
+            window.location.href = "reading_time_2.html"; // 人物解釈ページへ遷移
+        }
+
+        // ページを離れる前に警告を表示
+        window.addEventListener("beforeunload", function (event) {
+            if (allowNavigation) {
+                // フラグが true の場合は警告を出さない
+                return;
+            }
+            // 警告メッセージを設定
+            const message = "このページを離れますか？実験が正常に終了できません。";
+
+            // 標準的なブラウザの挙動のために以下を設定
+            event.preventDefault();
+            event.returnValue = message; // 古いブラウザ用の設定（多くのブラウザで無視される）
+
+            return message; // 最新のブラウザ用（Chromeなどでは無視されることが多い）
+        });
+    </script>
+</body>
+</html>
