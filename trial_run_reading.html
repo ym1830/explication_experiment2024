@@ -113,6 +113,10 @@
             const username = localStorage.getItem("username") || "Unknown";                        
             // 被験者ID呼び出し
             const participantId = localStorage.getItem("participantId") || "Unknown";
+            if (participantId === "Unknown") {
+                alert("被験者IDが設定されていません。最初からやり直してください（リロードやページを戻る行為が原因となりえます）");
+                return; // 処理を終了
+            }
 
             const last5_pass = '山奥でした';
             // 「末尾5文字」が入力されているかチェック
@@ -133,7 +137,7 @@
                 alert("確認しました。回答ページに進みます。");
                 alert("回答ページは10分間の制限時間があります。休憩はできません");
 
-                // 被験者IDの9桁目に基づいて遷移先ページを決定（9~12が遷移先タグ）
+                // 練習ページ2へ
                 allowNavigation = true;
                 window.location.href = "trial_run_explication.html"; // 人物解釈ページへ遷移
             } else {

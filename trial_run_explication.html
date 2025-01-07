@@ -294,6 +294,11 @@
         }
 
         function finishExperiment() {
+            const participantId = localStorage.getItem("participantId") || "Unknown";
+            if (participantId === "Unknown") {
+                alert("被験者IDが設定されていません。最初からやり直してください（リロードやページを戻る行為が原因となりえます）");
+                return; // 処理を終了
+            }
             if (confirm("回答を完了し、次の設問に移りますか？")) {
                 allowNavigation = true;// ページ遷移を許可                  
                 window.location.href = "reading_time_1.html"; // 空間解釈ページへ遷移
